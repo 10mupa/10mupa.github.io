@@ -151,7 +151,14 @@
     }
     .keyword-box summary, .library-box summary {
       cursor: pointer; color: #dbe4ff; font-weight: 700; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
+    .admin-unlock-btn {
+      appearance: none; border: 1px solid rgba(255,255,255,.08); border-radius: 999px;
+      padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+      background: #23315d; color: #dde5ff;
+    }
+    .admin-unlock-btn:hover { transform: translateY(-1px); }
     .keyword-box p, .library-box p { color: var(--muted); font-size: 13px; line-height: 1.6; }
     code {
       background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 6px; color: #d9e6ff;
@@ -164,8 +171,12 @@
     .status-good { color: #9cf0cf; }
     .status-warn { color: #ffd191; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    @media (max-width: 1200px) {
+      #resultsGrid { grid-template-columns: 1fr 1fr !important; }
+    }
     @media (max-width: 1080px) {
       .hero, .grid, .split { grid-template-columns: 1fr; }
+      #resultsGrid { grid-template-columns: 1fr !important; }
       h1 { font-size: 28px; }
     }
   </style>
@@ -213,6 +224,9 @@
         </div>
         <textarea id="sourceText" placeholder="공고문, 작성기준서, 평가기준서 전문을 붙여넣으세요."></textarea>
         <div class="toolbar">
+          <select id="municipalitySelect" style="flex: 0 1 160px; min-width: 120px;">
+            <option value="">지자체 선택 안 함</option>
+          </select>
           <button class="primary" id="analyzeBtn">독소조항 분석</button>
           <button class="secondary" id="sampleBtn">샘플 불러오기</button>
           <button class="secondary" id="clearBtn">초기화</button>
@@ -226,7 +240,48 @@
         </div>
 
         <details class="keyword-box">
-          <summary>탐지 키워드 · 사전 관리</summary>
+          <summary>
+            <span>지자체별 표준 기준서 관리</span>
+            <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
+          </summary>
+          <div class="split">
+            <div>
+              <div class="small" style="margin-bottom:8px;">분석 대상 지자체 선택</div>
+              <div class="note">
+                • 분석 대상 지자체는 상단 <b>문서 입력 도구모음</b>의 드롭다운에서 선택합니다.
+              </div>
+              <div class="row" style="margin-top:8px;">
+                <button class="secondary" id="refreshStandardsBtn" type="button">목록 새로고침</button>
+              </div>
+              <div class="note" id="standardStatus">
+                • 지자체를 선택하면 기존 탐지 + 표준 기준서 대조가 함께 실행됩니다.
+              </div>
+            </div>
+            <div>
+              <div class="small" style="margin-bottom:8px;">관리자 업로드</div>
+              <div class="row">
+                <input type="text" id="municipalityInput" placeholder="예: 서울특별시 / 성남시 / 전라남도" />
+                <button class="secondary" id="openStandardFileBtn" type="button">기준서 업로드</button>
+                <input type="file" id="standardFileInput" accept=".txt,.md,.html,.htm,.pdf,.hwpx" />
+              </div>
+              <div class="note">
+                • 지자체별 작성 기준서는 현재 브라우저 저장소에 보관됩니다.<br/>
+                • 분석 시 표준 기준서에 없는 추가 문구를 찾고, 독소조항으로 판독되면 <b>가중치 10</b>을 추가합니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="toolbar" style="margin-top:14px;">
+            <span class="pill">등록 지자체 <b id="standardCount">0</b>건</span>
+          </div>
+          <div id="standardList" class="keyword-list" style="margin-top:14px;"></div>
+        </details>
+
+        <details class="keyword-box">
+          <summary>
+            <span>탐지 키워드 · 사전 관리</span>
+            <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
+          </summary>
           <div class="split">
             <div>
               <div class="small" style="margin-bottom:8px;">사용자 탐지 키워드 추가</div>
@@ -288,21 +343,34 @@
           <div class="stat"><div class="label">감점·실격 조항</div><div id="penaltyCount" class="value">0</div></div>
           <div class="stat"><div class="label">학습 일치 조항</div><div id="learnMatchCount" class="value">0</div></div>
           <div class="stat"><div class="label">사용자 키워드 일치</div><div id="customMatchCount" class="value">0</div></div>
+          <div class="stat"><div class="label">기준서 추가 문구</div><div id="standardAddedCount" class="value">0</div></div>
+          <div class="stat"><div class="label">추가 문구 독소조항</div><div id="standardAddedToxicCount" class="value">0</div></div>
         </div>
         <div id="summaryBox" class="empty">아직 분석 결과가 없습니다.</div>
       </div>
     </section>
 
-    <section class="grid" style="margin-top:18px;">
+    <section style="margin-top:18px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:18px;" id="resultsGrid">
       <div class="card panel">
         <div class="section-title">
           <h2>의심 조항 목록</h2>
-          <span class="hint">점수 순 · 클릭 시 자동 스크롤 이동</span>
+          <span class="hint">점수 순 · 클릭 시 자동 스크롤</span>
         </div>
         <div id="findings" class="list">
           <div class="empty">분석을 실행하면 의심 조항이 높은 점수 순으로 정렬됩니다.</div>
         </div>
       </div>
+
+      <div class="card panel">
+        <div class="section-title">
+          <h2>추가문구 목록</h2>
+          <span class="hint" id="additionalHint">기준서 대비 추가된 문구</span>
+        </div>
+        <div id="additionalFindings" class="list">
+          <div class="empty">지자체 기준서를 선택하고 분석하면 추가문구가 표시됩니다.</div>
+        </div>
+      </div>
+
       <div class="card panel">
         <div class="section-title">
           <h2>검토 체크리스트</h2>
@@ -329,6 +397,8 @@
           <span class="hint">문의사항 · 개선사항 · 칭찬을 한 줄로 남길 수 있습니다</span>
         </div>
         <div class="feedback-row">
+          <input type="text" id="feedbackAuthorDept" style="flex: 0 1 140px;" maxlength="40" placeholder="부서 (선택)" />
+          <input type="text" id="feedbackAuthorName" style="flex: 0 1 100px;" maxlength="20" placeholder="이름 (선택)" />
           <input type="text" id="feedbackInput" class="feedback-input" maxlength="120" placeholder="예: PDF 추출 정확도가 좋아졌어요 / HWPX 표 안 글자도 잡아주세요 / 색상 대비가 좋아요" />
           <select id="feedbackType">
             <option value="문의사항">문의사항</option>
@@ -338,7 +408,7 @@
           </select>
           <button class="primary" id="addFeedbackBtn">피드백 등록</button>
         </div>
-        <div class="note">
+        <div class="note" id="feedbackStorageNote">
           • 한 줄 피드백은 현재 사용 중인 브라우저에 저장되어 다음에 다시 열어도 유지됩니다.
         </div>
         <div class="toolbar" style="margin-top:14px;">
@@ -350,24 +420,118 @@
       </div>
     </section>
 
+    <section class="grid" style="margin-top:18px; grid-template-columns: 1fr;">
+      <div class="card panel">
+        <div class="section-title">
+          <h2>독소조항 사례 공유</h2>
+          <span class="hint">실제로 발견한 독소조항 문구를 동료들과 공유합니다</span>
+        </div>
+        <div class="split">
+          <div>
+            <div class="row">
+              <input type="text" id="caseAuthorDept" style="flex: 0 1 140px;" maxlength="40" placeholder="부서 (선택)" />
+              <input type="text" id="caseAuthorName" style="flex: 0 1 100px;" maxlength="20" placeholder="이름 (선택)" />
+              <select id="caseCategory" style="flex: 0 1 160px;">
+                <option value="font">폰트/글자크기</option>
+                <option value="spacing">줄간격/자간/장평</option>
+                <option value="margin">여백/편집형식</option>
+                <option value="page">용지/쪽수/페이지</option>
+                <option value="decoration">치장 제한</option>
+                <option value="penalty">감점/실격</option>
+                <option value="toxic">독소조항 일반</option>
+              </select>
+            </div>
+            <textarea id="caseClauseText" style="min-height:80px; margin-top:10px;" maxlength="500" placeholder="발견한 독소조항 문구를 그대로 붙여넣으세요."></textarea>
+            <input type="text" id="caseNote" style="margin-top:10px;" maxlength="200" placeholder="메모 (선택): 왜 문제인지, 어느 공고인지 등" />
+            <div class="toolbar" style="margin-top:10px;">
+              <button class="primary" id="addCaseShareBtn">사례 등록</button>
+            </div>
+          </div>
+          <div>
+            <div class="note" id="caseShareStorageNote">
+              • 등록된 사례는 이 브라우저에 저장되며, 다른 직원과는 공유되지 않습니다.
+            </div>
+            <div class="toolbar" style="margin-top:10px;">
+              <span class="pill">등록된 사례 <b id="caseSharesCount">0</b>건</span>
+            </div>
+          </div>
+        </div>
+        <div id="caseSharesList" class="list" style="margin-top:14px;">
+          <div class="empty">아직 공유된 독소조항 사례가 없습니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top:18px; grid-template-columns: 1fr;">
+      <div class="card panel">
+        <div class="section-title">
+          <h2>최근 분석 기록</h2>
+          <span class="hint">최근 20건 · 전 직원 공유 시 실시간 반영</span>
+        </div>
+        <div id="analysisLogList" class="list">
+          <div class="empty">아직 분석 기록이 없습니다.</div>
+        </div>
+      </div>
+    </section>
+
     <div class="footer">
-      ※ 모든 데이터 처리는 사용자 PC(브라우저) 내부에서만 안전하게 이루어집니다.<br/>
+      ※ 공고문·기준서 본문의 분석은 항상 사용자 PC(브라우저) 내부에서만 이루어집니다.<br/>
+      ※ 표준 기준서·탐지 키워드·분석횟수·피드백·독소조항 사례는 전 직원 공유를 위해 Firebase 데이터베이스에 저장됩니다.<br/>
       Copyright 2026 KG Technova All rights reserved.
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script>
     const el = (id) => document.getElementById(id);
+
+    // ============================================================
+    // Firebase 설정 (공유 데이터베이스: 표준 기준서 / 키워드 사전 /
+    // 분석횟수 기록 / 한줄 피드백 / 독소조항 사례 공유)
+    // ------------------------------------------------------------
+    // 1) https://console.firebase.google.com 에서 프로젝트를 새로 만듭니다.
+    // 2) [프로젝트 설정 > 일반 > 내 앱] 에서 웹 앱을 추가하고 아래 값을 복사해 넣습니다.
+    //    (이 값들은 비밀키가 아니라 "어떤 프로젝트를 쓰는지" 알려주는 공개 식별자이며,
+    //     GitHub에 그대로 올려도 안전합니다. 실제 보안은 Firestore 규칙과 로그인이 담당합니다.)
+    // 3) [빌드 > Firestore Database] 에서 데이터베이스를 생성합니다.
+    // 4) [빌드 > Authentication > Sign-in method] 에서 "이메일/비밀번호"를 사용 설정하고,
+    //    [Users] 탭에서 관리자 계정을 1개 만듭니다. 이메일은 아래 ADMIN_EMAIL과 반드시 일치시키세요.
+    // 5) Firestore 규칙(Rules) 탭에 이 파일과 함께 제공된 firestore.rules 내용을 붙여넣습니다.
+    // ============================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5ps10QKLcJb0EjtuO99UDcjSc0NqPHEc",
+      authDomain: "toxcop-311a8.firebaseapp.com",
+      projectId: "toxcop-311a8",
+      storageBucket: "toxcop-311a8.firebasestorage.app",
+      messagingSenderId: "747525803491",
+      appId: "1:747525803491:web:e6724e4605d8646d0b64d6"
+    };
+    const ADMIN_EMAIL = 'solesaerom@gmail.com'; // Firebase Authentication에 이 이메일로 관리자 계정을 만들어 두세요.
+    const FIREBASE_READY = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY';
+
+    let db = null, auth = null;
+    if (FIREBASE_READY) {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+    } else {
+      console.warn('[독소조항탐지기] firebaseConfig가 비어 있어 공유 DB 기능이 꺼져 있습니다. 지금은 이 브라우저에만 저장되는 예전 방식으로 동작합니다.');
+    }
     const LS_KEYS = {
       customKeywords: 'toxcop.customKeywords.v2',
       learnedClauses: 'toxcop.learnedClauses.v2',
       falsePositives: 'toxcop.falsePositives.v2',
       analyzeStats: 'toxcop.analyzeStats.v1',
-      feedbackList: 'toxcop.feedbackList.v1'
+      feedbackList: 'toxcop.feedbackList.v1',
+      standardLibraries: 'toxcop.standardLibraries.v1',
+      caseShares: 'toxcop.caseShares.v1'
     };
     const ADMIN_PASSWORD = '2957';
+    let adminUnlocked = false;
 
     const sampleText = `Ⅰ. 기술인평가서 작성지침\n1. 본문은 휴먼명조 12포인트, 줄간격 160%로 작성하여야 한다.\n2. 대제목은 16포인트, 소제목은 14포인트로 한다.\n3. 용지는 A4 규격으로 하며 좌우여백 20mm, 상하여백 15mm를 준수한다.\n4. 표지 및 간지를 제외한 본문은 20쪽 이내로 작성한다.\n5. 본문에는 임의의 색상, 음영, 테두리, 워드아트 등 과도한 치장을 금지한다.\n6. 상기 작성기준을 위반한 경우 항목당 1점 감점한다.\n7. 페이지 수를 초과하거나 지정 양식을 위반한 경우 평가에서 제외할 수 있다.\n8. 단, 표와 그림 내 글자크기는 제한 없음.`;
 
@@ -377,8 +541,9 @@
       margin: { label: '여백/편집형식', weight: 2, regex: /(여백|상하여백|좌우여백|머리말|꼬리말|편집|서식|양식|작성형식|편집형식|규격서식)/i },
       page: { label: '용지/쪽수/페이지', weight: 2, regex: /(A4|A3|용지|페이지|쪽수|매수|장수|쪽\s?이내|페이지\s?이내|매\s?이내|표지|간지|제본|편철|양면|단면|총\s?매수|쪽\s?초과|페이지\s?초과)/i },
       decoration: { label: '치장 제한', weight: 2, regex: /(색상|칼라|컬러|음영|테두리|밑줄|굵게|볼드|기울임|워드아트|장식|도형|배경색|형광펜|삽도|장평\s?조정|색지)/i },
-      penalty: { label: '감점/실격', weight: 3, regex: /(감점|실격|무효|평가\s?제외|불이익|반려|인정하지\s?않|미준수|위반\s?시|초과\s?시|제외할\s?수\s?있다|감액|배제|탈락|미반영)/i },
+      penalty: { label: '감점/실격', weight: 3, regex: /(감점|실격|무효|평가\s?제외|불이익|반려|인정하지\s?않|미준수|위반\s?시|초과\s?시|제외할\s?수\s?있다|감액|배제|탈락|미반영|박탈|자격[^\n]{0,4}(?:상실|제한|정지|박탈|취소)|입찰\s?참가\s?자격|말소|정지|취소|불인정|부적격|계약\s?해제|계약\s?해지|등록\s?말소)/i },
       toxic: { label: '독소조항 일반', weight: 2, regex: /(준수하여야\s?한다|따르지\s?않는\s?경우|임의로\s?변경할\s?수\s?없다|양식에\s?맞지\s?않는\s?경우|지정\s?양식|정해진\s?서식|초과분은\s?평가하지\s?않음|인정하지\s?않음)/i },
+      standard: { label: '기준서 대비 추가', weight: 0, regex: /$^/ },
       safe: { label: '제한 없음/완화', weight: -3, regex: /(제한\s?없음|제한을\s?두지\s?않|크기\s?제한\s?없음|글씨\s?크기는\s?제한\s?없음|적용하지\s?않는다|자율적으로\s?작성)/i }
     };
 
@@ -387,6 +552,9 @@
     let falsePositives = loadJson(LS_KEYS.falsePositives, []);
     let analyzeStats = loadJson(LS_KEYS.analyzeStats, { dateKey: '', todayCount: 0, totalCount: 0 });
     let feedbackList = loadJson(LS_KEYS.feedbackList, []);
+    let standardLibraries = loadJson(LS_KEYS.standardLibraries, {});
+    let caseSharesList = loadJson(LS_KEYS.caseShares, []);
+    let recentAnalysisLogs = [];
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -408,18 +576,68 @@
       const setB = new Set(tb);
       return ta.filter(t => setB.has(t)).length / Math.max(ta.length, tb.length);
     }
-    function normalizeClauseLine(line) { return line.replace(/^[-*\d\.)\s]+/, '').trim(); }
+    // 문두 글머리표(번호/기호)만 한 번 제거합니다. 이전 버전은 "선두의 숫자·점·공백 연속"을
+    // 통째로 지워버려서, "0.5 0.5 0.4 0.3 0.2" 같은 표 안의 순수 숫자 행이나 "1.50% 미만"
+    // 같은 소수점 값이 전부(또는 의미 없는 부분까지) 삭제되는 문제가 있었습니다.
+    // (?!\d) 부정형 전방탐색으로 "1." 뒤에 숫자가 이어지면(=소수점) 글머리표로 보지 않습니다.
+    function normalizeClauseLine(line) {
+      const bulletPattern = /^\s*(?:\((?:[0-9]{1,3}|[가-하]|[A-Za-z]|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+)\)|(?:[0-9]{1,3}|[가-하]|[A-Za-z]|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+)[.\)](?!\d)|[-*○●□■※ㅇ])\s*/;
+      return line.replace(bulletPattern, '').trim();
+    }
 
-    function requireAdmin(actionName) {
+    // 한 번 인증하면(잠금 해제) 이후에는 이 화면을 새로고침하기 전까지
+    // 관리자 비밀번호를 다시 묻지 않습니다. 매번 각 기능(키워드 추가/삭제,
+    // 기준서 업로드 등)마다 비밀번호를 입력해야 했던 번거로움을 없앴습니다.
+    async function requireAdmin(actionName) {
+      if (adminUnlocked) return true;
       const pw = prompt(`관리자 전용 기능입니다.
-[${actionName}] 비밀번호를 입력하세요.`);
+[${actionName}] 관리자 비밀번호를 입력하세요.`);
       if (pw === null) return false;
-      if (pw !== ADMIN_PASSWORD) {
+
+      if (!FIREBASE_READY) {
+        // Firebase 미설정 상태에서는 예전처럼 로컬 고정 비밀번호로 동작합니다.
+        if (pw !== ADMIN_PASSWORD) {
+          alert('비밀번호가 올바르지 않습니다.');
+          return false;
+        }
+        adminUnlocked = true;
+        updateAdminUnlockButtons();
+        return true;
+      }
+
+      try {
+        await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pw);
+        adminUnlocked = true;
+        updateAdminUnlockButtons();
+        return true;
+      } catch (e) {
+        console.error(e);
         alert('비밀번호가 올바르지 않습니다.');
         return false;
       }
-      return true;
     }
+
+    function updateAdminUnlockButtons() {
+      document.querySelectorAll('.admin-unlock-btn').forEach(btn => {
+        btn.textContent = adminUnlocked ? '🔓 관리자 인증됨' : '🔒 관리자 인증';
+        btn.title = adminUnlocked ? '클릭하면 다시 잠글 수 있습니다.' : '한 번 인증하면 새로고침 전까지 비밀번호를 다시 묻지 않습니다.';
+      });
+    }
+
+    window.toggleAdminUnlock = async function(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      if (adminUnlocked) {
+        if (confirm('관리자 인증을 해제할까요?\n(다시 잠그면 각 기능마다 비밀번호를 입력해야 합니다)')) {
+          adminUnlocked = false;
+          if (FIREBASE_READY && auth.currentUser) { try { await auth.signOut(); } catch (e) { console.error(e); } }
+          updateAdminUnlockButtons();
+        }
+        return;
+      }
+      if (await requireAdmin('관리자 인증')) {
+        alert('관리자 인증되었습니다. 이 화면을 새로고침하기 전까지는 비밀번호를 다시 입력하지 않아도 됩니다.');
+      }
+    };
 
     function getDateParts() {
       const now = new Date();
@@ -444,16 +662,51 @@
     }
 
     function updateMemoStats() {
-      const date = syncAnalyzeStatsDate();
-      el('memoStats').textContent = `${date.display} / 오늘의 독소조항 분석 횟수 ${String(analyzeStats.todayCount).padStart(2, '0')}회 (누적 ${String(analyzeStats.totalCount).padStart(2, '0')}회)`;
+      const date = getDateParts();
+      if (!FIREBASE_READY) {
+        // Firebase 미설정 시 예전처럼 이 브라우저에만 저장되는 카운트를 사용합니다.
+        if (analyzeStats.dateKey !== date.key) {
+          analyzeStats.dateKey = date.key;
+          analyzeStats.todayCount = 0;
+          saveJson(LS_KEYS.analyzeStats, analyzeStats);
+        }
+      }
+      const shareNote = FIREBASE_READY ? ' · 전 직원 공유' : ' · 이 브라우저만';
+      el('memoStats').textContent = `${date.display} / 오늘의 독소조항 분석 횟수 ${String(analyzeStats.todayCount || 0).padStart(2, '0')}회 (누적 ${String(analyzeStats.totalCount || 0).padStart(2, '0')}회${shareNote})`;
     }
 
-    function incrementAnalyzeStats() {
-      syncAnalyzeStatsDate();
-      analyzeStats.todayCount += 1;
-      analyzeStats.totalCount += 1;
-      saveJson(LS_KEYS.analyzeStats, analyzeStats);
-      updateMemoStats();
+    async function incrementAnalyzeStats(meta) {
+      if (!FIREBASE_READY) {
+        syncAnalyzeStatsDate();
+        analyzeStats.todayCount += 1;
+        analyzeStats.totalCount += 1;
+        saveJson(LS_KEYS.analyzeStats, analyzeStats);
+        updateMemoStats();
+        return;
+      }
+      try {
+        const date = getDateParts();
+        const ref = db.collection('counters').doc('analysis');
+        await db.runTransaction(async (tx) => {
+          const snap = await tx.get(ref);
+          const cur = snap.exists ? snap.data() : { dateKey: '', todayCount: 0, totalCount: 0 };
+          let { dateKey, todayCount, totalCount } = cur;
+          if (dateKey !== date.key) { dateKey = date.key; todayCount = 0; }
+          todayCount = (todayCount || 0) + 1;
+          totalCount = (totalCount || 0) + 1;
+          tx.set(ref, { dateKey, todayCount, totalCount, lastUpdated: Date.now() });
+        });
+        if (meta) {
+          await db.collection('analysisLogs').add({
+            timestamp: Date.now(),
+            municipality: meta.municipality || '',
+            hitCount: meta.hitCount || 0,
+            riskLabel: meta.riskLabel || ''
+          });
+        }
+      } catch (e) {
+        console.error('분석횟수 기록 실패:', e);
+      }
     }
 
     function formatDateTime(ts) {
@@ -472,15 +725,101 @@
         el('feedbackList').innerHTML = '<div class="empty">아직 등록된 피드백이 없습니다.</div>';
         return;
       }
-      el('feedbackList').innerHTML = feedbackList.map(item => `
+      el('feedbackList').innerHTML = feedbackList.map((item, idx) => {
+        const authorLine = (item.authorName || item.authorDept)
+          ? `<span class="badge green">${escapeHtml([item.authorDept, item.authorName].filter(Boolean).join(' · ') || '작성자 미상')}</span>`
+          : '';
+        const delBtn = FIREBASE_READY
+          ? `<button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeFeedback('${item.id}')">삭제</button>`
+          : `<button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeFeedback(${idx})">삭제</button>`;
+        return `
         <div class="item">
           <div class="item-top">
             <div class="feedback-meta">
               <span class="badge purple">${escapeHtml(item.type)}</span>
               <span class="badge blue">${escapeHtml(formatDateTime(item.createdAt))}</span>
+              ${authorLine}
             </div>
+            ${delBtn}
           </div>
           <div class="excerpt">${escapeHtml(item.text)}</div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    window.removeFeedback = async function(idOrIdx) {
+      if (!(await requireAdmin('피드백 삭제'))) return;
+      if (FIREBASE_READY) {
+        await db.collection('feedback').doc(idOrIdx).delete();
+      } else {
+        feedbackList.splice(idOrIdx, 1);
+        saveJson(LS_KEYS.feedbackList, feedbackList);
+        renderFeedbackList();
+      }
+    };
+
+    function renderCaseShares() {
+      const listEl = el('caseSharesList');
+      const countEl = el('caseSharesCount');
+      if (!listEl) return;
+      if (countEl) countEl.textContent = caseSharesList.length;
+      if (!caseSharesList.length) {
+        listEl.innerHTML = '<div class="empty">아직 공유된 독소조항 사례가 없습니다.</div>';
+        return;
+      }
+      listEl.innerHTML = caseSharesList.map((item, idx) => {
+        const authorLine = (item.authorName || item.authorDept)
+          ? `<span class="badge green">${escapeHtml([item.authorDept, item.authorName].filter(Boolean).join(' · ') || '작성자 미상')}</span>`
+          : '';
+        const delBtn = FIREBASE_READY
+          ? `<button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeCaseShare('${item.id}')">삭제</button>`
+          : `<button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeCaseShare(${idx})">삭제</button>`;
+        return `
+        <div class="item">
+          <div class="item-top">
+            <div class="badges">
+              <span class="badge purple">${escapeHtml(categories[item.category]?.label || item.category || '기타')}</span>
+              <span class="badge blue">${escapeHtml(formatDateTime(item.createdAt))}</span>
+              ${authorLine}
+            </div>
+            ${delBtn}
+          </div>
+          <div class="excerpt">${escapeHtml(item.clauseText)}</div>
+          ${item.note ? `<div class="why">메모: ${escapeHtml(item.note)}</div>` : ''}
+        </div>
+      `;
+      }).join('');
+    }
+
+    window.removeCaseShare = async function(idOrIdx) {
+      if (!(await requireAdmin('사례 삭제'))) return;
+      if (FIREBASE_READY) {
+        await db.collection('caseShares').doc(idOrIdx).delete();
+      } else {
+        caseSharesList.splice(idOrIdx, 1);
+        saveJson(LS_KEYS.caseShares, caseSharesList);
+        renderCaseShares();
+      }
+    };
+
+    function renderAnalysisLogs() {
+      const listEl = el('analysisLogList');
+      if (!listEl) return;
+      if (!recentAnalysisLogs.length) {
+        listEl.innerHTML = '<div class="empty">아직 분석 기록이 없습니다.</div>';
+        return;
+      }
+      listEl.innerHTML = recentAnalysisLogs.map(item => `
+        <div class="item">
+          <div class="item-top">
+            <div class="badges">
+              <span class="badge blue">${escapeHtml(formatDateTime(item.timestamp))}</span>
+              ${item.municipality ? `<span class="badge purple">${escapeHtml(item.municipality)}</span>` : ''}
+              <span class="badge ${item.riskLabel === '높음' ? 'red' : item.riskLabel === '보통' ? 'yellow' : 'green'}">위험도 ${escapeHtml(item.riskLabel || '-')}</span>
+              <span class="badge">의심 조항 ${item.hitCount || 0}건</span>
+            </div>
+          </div>
         </div>
       `).join('');
     }
@@ -490,7 +829,248 @@
       return [...new Set(lines)];
     }
 
+    function normalizeCompareText(text) {
+      return normalizeClauseLine(String(text || ''))
+        .replace(/[“”‘’"'`]/g, '')
+        .replace(/[\[\]\(\){}<>]/g, ' ')
+        .replace(/[·•※]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+
+    function parseStandardClauses(rawText) {
+      // 길이 필터(6자 이상)는 글머리표를 떼어내기 "전"의 원문 기준으로 판단합니다.
+      // 떼어낸 뒤 문자열로 필터링하면, "1) 사업명 :"처럼 원문은 충분히 길어도
+      // 글머리표를 떼고 나면 6자 미만이 되어 기준서 목록에서 통째로 빠져버리고,
+      // 이후 동일 문장이 나와도 "추가 문구"로 오탐지되는 원인이 됩니다.
+      return [...new Set(
+        rawText.split(/\r?\n/)
+          .map(line => line.replace(/[^\S\r\n]+/g, ' ').trim())
+          .filter(line => line.length >= 6)
+          .map(normalizeClauseLine)
+          .filter(line => line.length > 0)
+          .filter(line => !/^(목\s*차|일반사항|제출서류|평가기준|작성기준|첨부파일|붙임|별첨|서식|참고자료)$/i.test(line))
+      )];
+    }
+
+
+    function clauseSimilarity(a, b) {
+      const na = normalizeCompareText(a);
+      const nb = normalizeCompareText(b);
+      if (!na || !nb) return 0;
+      // 완전 일치/포함 여부는 띄어쓰기를 아예 무시하고 비교합니다. PDF/HWPX는
+      // 줄바꿈 위치에 따라 같은 문장이라도 공백이 달리 들어가는 경우가 많아서
+      // (예: "하도급을 받은" vs "하도급을받은"), 공백 한 칸 차이 때문에 같은
+      // 문구를 "추가 문구"로 오탐지하는 걸 막기 위함입니다. 토큰 기반 유사도는
+      // 단어 경계가 필요하므로 공백을 유지한 na/nb를 그대로 사용합니다.
+      const naNoSpace = na.replace(/\s+/g, '');
+      const nbNoSpace = nb.replace(/\s+/g, '');
+      if (naNoSpace === nbNoSpace) return 1;
+      if (naNoSpace.includes(nbNoSpace) || nbNoSpace.includes(naNoSpace)) return 0.92;
+      const tokenSim = similarityByTokens(na, nb);
+      const shorter = Math.min(na.length, nb.length);
+      const prefixBonus = shorter >= 8 && (na.slice(0, 12) === nb.slice(0, 12)) ? 0.08 : 0;
+      return Math.min(1, tokenSim + prefixBonus);
+    }
+
+    function getSortedMunicipalities() {
+      return Object.keys(standardLibraries).sort((a, b) => a.localeCompare(b, 'ko'));
+    }
+
+    function refreshMunicipalityOptions(selectedValue) {
+      const select = el('municipalitySelect');
+      const current = selectedValue !== undefined ? selectedValue : select.value;
+      const options = ['<option value="">지자체 선택 안 함</option>'].concat(
+        getSortedMunicipalities().map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+      );
+      select.innerHTML = options.join('');
+      if (current && standardLibraries[current]) select.value = current;
+      else select.value = '';
+      updateStandardStatus();
+    }
+
+    function updateStandardStatus() {
+      const name = el('municipalitySelect').value;
+      const lib = name ? standardLibraries[name] : null;
+      if (!name) {
+        el('standardStatus').innerHTML = '• 지자체를 선택하면 기존 탐지 + 표준 기준서 대조가 함께 실행됩니다.';
+        return;
+      }
+      if (!lib) {
+        el('standardStatus').innerHTML = `• <b>${escapeHtml(name)}</b> 기준서가 아직 등록되지 않았습니다.`;
+        return;
+      }
+      const liveClauseCount = (typeof lib.rawText === 'string' && lib.rawText.length)
+        ? parseStandardClauses(lib.rawText).length
+        : (lib.clauses ? lib.clauses.length : 0);
+      el('standardStatus').innerHTML = `• 선택 지자체: <b>${escapeHtml(name)}</b> · 기준 문구 ${liveClauseCount.toLocaleString()}건 · 최근 업로드 ${escapeHtml(formatDateTime(lib.uploadedAt || Date.now()))}`;
+    }
+
+    function renderStandardLibraries() {
+      const names = getSortedMunicipalities();
+      el('standardCount').textContent = names.length;
+      if (!names.length) {
+        el('standardList').innerHTML = '<div class="empty">등록된 지자체 기준서가 없습니다.</div>';
+        refreshMunicipalityOptions('');
+        return;
+      }
+      el('standardList').innerHTML = names.map(name => {
+        const item = standardLibraries[name];
+        const liveCount = (typeof item.rawText === 'string' && item.rawText.length)
+          ? parseStandardClauses(item.rawText).length
+          : Number(item.clauses?.length || 0);
+        return `
+          <div class="item">
+            <div class="item-top">
+              <div class="badges">
+                <span class="badge purple">${escapeHtml(name)}</span>
+                <span class="badge blue">문구 ${liveCount.toLocaleString()}건</span>
+                <span class="badge green">${escapeHtml(item.fileName || '직접 업로드')}</span>
+              </div>
+              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeStandardLibrary(${escapeHtml(JSON.stringify(name))})">삭제</button>
+            </div>
+            <div class="why">업로드 시각: ${escapeHtml(formatDateTime(item.uploadedAt || Date.now()))}</div>
+          </div>
+        `;
+      }).join('');
+      refreshMunicipalityOptions(el('municipalitySelect').value || names[0]);
+    }
+
+    function getSelectedStandardLibrary() {
+      const name = el('municipalitySelect').value;
+      if (!name || !standardLibraries[name]) return null;
+      return { name, ...standardLibraries[name] };
+    }
+
+    function compareAgainstStandard(lines) {
+      const selected = getSelectedStandardLibrary();
+      if (!selected) {
+        return { enabled: false, municipality: '', additionalClauses: [], additionalMap: new Map() };
+      }
+
+      // 중요: selected.clauses(예전에 저장된 값)를 그대로 쓰지 않고,
+      // 저장된 원문(rawText)으로부터 "지금 버전의" parseStandardClauses로
+      // 매번 다시 계산합니다. 예전 버전 파서의 버그로 저장된 clauses가
+      // localStorage에 그대로 남아있으면, 코드를 고쳐도 재분석 시 여전히
+      // 옛날에 잘못 잘려나간 기준 문구 목록을 참조하게 되어 같은 오탐지가
+      // 재현되기 때문입니다. rawText만 있으면 항상 최신 로직으로 재파싱합니다.
+      const standardClauses = (typeof selected.rawText === 'string' && selected.rawText.length)
+        ? parseStandardClauses(selected.rawText)
+        : (Array.isArray(selected.clauses) ? selected.clauses : []);
+
+      if (!standardClauses.length) {
+        return { enabled: false, municipality: '', additionalClauses: [], additionalMap: new Map() };
+      }
+
+      const additionalClauses = [];
+      const additionalMap = new Map();
+
+      lines.forEach(line => {
+        const text = line.text.trim();
+        if (text.length < 8) return;
+        if (/^(목\s*차|일반사항|평가기준|제출서류|첨부파일|참고자료|붙임|별첨)\s*$/i.test(text)) return;
+        if (/^[0-9ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ가-하A-Z\(\)\.\-\s]+$/.test(text) && text.length < 16) return;
+
+
+        let bestClause = '';
+        let bestSimilarity = 0;
+        for (const clause of standardClauses) {
+          const sim = clauseSimilarity(text, clause);
+          if (sim > bestSimilarity) {
+            bestSimilarity = sim;
+            bestClause = clause;
+            if (sim >= 0.92) break;
+          }
+        }
+
+        if (bestSimilarity < 0.58) {
+          const info = {
+            lineNo: line.lineNo,
+            text,
+            similarity: bestSimilarity,
+            bestClause
+          };
+          additionalClauses.push(info);
+          additionalMap.set(line.lineNo, info);
+        }
+      });
+
+      return { enabled: true, municipality: selected.name, additionalClauses, additionalMap };
+    }
+
+    function inspectRiskSignals(text, prev, next, customMatchers) {
+      const matched = [];
+      const customMatched = [];
+      const learnMatched = [];
+      const safe = categories.safe.regex.test(text);
+      let score = 0;
+      let isNlpMatched = false;
+
+      const nlpPattern = /(경우|시|에는|라면|초과|미준수|위반|제출하지\s?않|미제출|미이행|불이행)[\s\S]*(감점|제외|불가|0점|실격|제재|평가하지\s?않|탈락|박탈|말소|정지|취소|부적격|불인정)/i;
+      if (nlpPattern.test(text)) {
+        isNlpMatched = true;
+        score += 5;
+      }
+
+      ['font','spacing','margin','page','decoration','penalty','toxic'].forEach((key) => {
+        if (categories[key].regex.test(text)) matched.push(key);
+      });
+
+      customMatchers.forEach(m => {
+        if (m.regex.test(text)) {
+          customMatched.push(m);
+          score += m.weight;
+        }
+      });
+
+      learnedClauses.forEach(clause => {
+        if (text.includes(clause) || clause.includes(text)) {
+          learnMatched.push({ clause, similarity: 1 });
+        } else {
+          const sim = similarityByTokens(text, clause);
+          if (sim >= 0.45) learnMatched.push({ clause, similarity: sim });
+        }
+      });
+
+      if (learnMatched.length) {
+        learnMatched.sort((a,b) => b.similarity - a.similarity);
+        score += learnMatched[0].similarity >= 0.9 ? 4 : learnMatched[0].similarity >= 0.6 ? 3 : 2;
+      }
+
+      const hasFormat = matched.some(k => ['font','spacing','margin','page','decoration','toxic'].includes(k));
+      const hasPenalty = matched.includes('penalty') || customMatched.some(m => m.category === 'penalty');
+
+      matched.forEach(k => { score += categories[k]?.weight || 0; });
+
+      const nearbyPenalty = categories.penalty.regex.test(prev) || categories.penalty.regex.test(next);
+      const nearbyFormat = ['font','spacing','margin','page','decoration','toxic'].some(k => categories[k].regex.test(prev) || categories[k].regex.test(next));
+
+      if (hasFormat && hasPenalty) score += 3;
+      if (hasFormat && nearbyPenalty) score += 2;
+      if (hasPenalty && nearbyFormat) score += 2;
+      if (safe) score -= 3;
+
+      const allMatched = [...new Set([...matched, ...customMatched.map(m => m.category)])];
+      const isToxicBySignals = score >= 5 || isNlpMatched || (hasFormat && hasPenalty) || customMatched.some(m => ['penalty','toxic'].includes(m.category)) || learnMatched.length > 0;
+
+      return {
+        score,
+        matched: allMatched,
+        customMatched,
+        learnMatched: learnMatched.slice(0, 2),
+        hasFormat,
+        hasPenalty,
+        isNlpMatched,
+        safe,
+        nearbyPenalty,
+        nearbyFormat,
+        isToxicBySignals
+      };
+    }
+
     window.switchTab = function(tab) {
+
       el('customKeywords').style.display = tab === 'custom' ? 'flex' : 'none';
       el('learnedKeywords').style.display = tab === 'learned' ? 'flex' : 'none';
       
@@ -504,18 +1084,21 @@
 
       if (!customKeywords.length) el('customKeywords').innerHTML = '<div class="empty">사용자 키워드가 없습니다.</div>';
       else {
-        el('customKeywords').innerHTML = customKeywords.map((item, idx) => `
+        el('customKeywords').innerHTML = customKeywords.map((item, idx) => {
+          const removeArg = FIREBASE_READY ? `'${item.id}'` : idx;
+          return `
           <div class="item">
             <div class="item-top">
               <div class="badges">
                 <span class="badge purple">${escapeHtml(categories[item.category]?.label || '사용자 키워드')}</span>
                 <span class="badge blue">가중치 ${item.weight}</span>
               </div>
-              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeKeyword(${idx})">삭제</button>
+              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeKeyword(${removeArg})">삭제</button>
             </div>
             <div class="excerpt">${escapeHtml(item.keyword)}</div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
 
       if (!learnedClauses.length) el('learnedKeywords').innerHTML = '<div class="empty">학습된 문구가 없습니다.</div>';
@@ -532,14 +1115,19 @@
       }
     }
 
-    window.removeKeyword = function(idx) {
-      if (!requireAdmin('삭제')) return;
-      customKeywords.splice(idx, 1);
-      saveJson(LS_KEYS.customKeywords, customKeywords);
-      renderCustomKeywords();
+    window.removeKeyword = async function(idOrIdx) {
+      if (!(await requireAdmin('삭제'))) return;
+      if (FIREBASE_READY) {
+        await db.collection('keywords').doc(idOrIdx).delete();
+      } else {
+        customKeywords.splice(idOrIdx, 1);
+        saveJson(LS_KEYS.customKeywords, customKeywords);
+        renderCustomKeywords();
+      }
     };
-    window.removeLearnedKeyword = function(idx) {
-      if (!requireAdmin('삭제')) return;
+    window.removeLearnedKeyword = async function(idx) {
+      // 학습 문구는 이 브라우저에만 저장되는 개인 작업용 데이터입니다 (공유 DB 대상 아님).
+      if (!(await requireAdmin('삭제'))) return;
       learnedClauses.splice(idx, 1);
       saveJson(LS_KEYS.learnedClauses, learnedClauses);
       renderCustomKeywords();
@@ -560,97 +1148,82 @@
       doAnalyze();
     };
 
+    // 표준 기준서에 없는 "추가 문구"는 그 자체로 이미 의심 대상이므로, 일반 독소조항
+    // 판정(inspectRiskSignals)보다 넓게 잡아야 놓치는 경우가 줄어듭니다. 아래 사전은
+    // 자격 박탈/실격/불이익류 표현을 포괄적으로 담아, "제출하지 않을시 입찰자격을
+    // 박탈한다"처럼 일반 사전엔 없는 표현(박탈 등)도 추가 문구 판정에서는 잡아냅니다.
+    const additionalClauseToxicRegex = /(박탈|실격|무효|자격[^\n]{0,4}(?:상실|제한|정지|박탈|취소)|입찰\s?참가\s?자격|부적격|불인정|불이익|감점|감액|제외|배제|반려|탈락|말소|취소|정지(?!\s?없)|해제|해지|미준수|위반\s?시|미제출|미이행|불이행|제출하지\s?않)/;
+
     function analyzeText(text) {
       const lines = text.split(/\r?\n/).map((line, idx) => ({ lineNo: idx + 1, text: line.trim() })).filter(x => x.text.length > 0);
       const findings = [];
       let formatCount = 0, penaltyCount = 0, learnMatchCount = 0, customMatchCount = 0;
+      let standardAddedCount = 0, standardAddedToxicCount = 0;
       const customMatchers = buildDynamicMatchers();
-
       const excludePatterns = /^(목\s*차|진행순서|배점기준|평가기준|일반사항|제출서류|오시는\s*길|참고자료|첨부파일)\s*$/i;
-      const nlpPattern = /(경우|시|에는|라면|초과|미준수|위반).*(감점|제외|불가|0점|실격|제재|평가하지\s?않|탈락)/i;
+      const standardComparison = compareAgainstStandard(lines);
+      standardAddedCount = standardComparison.additionalClauses.length;
 
       lines.forEach((line, idx) => {
         const text = line.text;
-        
-        if (falsePositives.includes(text)) return; 
+        if (falsePositives.includes(text)) return;
         if (text.length < 20 && excludePatterns.test(text)) return;
-
-        const matched = [];
-        const customMatched = [];
-        const learnMatched = [];
-        const safe = categories.safe.regex.test(text);
-        let score = 0;
-
-        let isNlpMatched = false;
-        if (nlpPattern.test(text)) {
-          isNlpMatched = true;
-          score += 5;
-        }
-
-        ['font','spacing','margin','page','decoration','penalty','toxic'].forEach((key) => {
-          if (categories[key].regex.test(text)) matched.push(key);
-        });
-
-        customMatchers.forEach(m => {
-          if (m.regex.test(text)) {
-            customMatched.push(m);
-            score += m.weight;
-          }
-        });
-
-        if (customMatched.length) customMatchCount += 1;
-
-        learnedClauses.forEach(clause => {
-          if (text.includes(clause) || clause.includes(text)) {
-            learnMatched.push({ clause, similarity: 1 });
-          } else {
-            const sim = similarityByTokens(text, clause);
-            if (sim >= 0.45) learnMatched.push({ clause, similarity: sim });
-          }
-        });
-
-        if (learnMatched.length) {
-          learnMatched.sort((a,b) => b.similarity - a.similarity);
-          learnMatchCount += 1;
-          score += learnMatched[0].similarity >= 0.9 ? 4 : learnMatched[0].similarity >= 0.6 ? 3 : 2;
-        }
-
-        const hasFormat = matched.some(k => ['font','spacing','margin','page','decoration','toxic'].includes(k));
-        const hasPenalty = matched.includes('penalty') || customMatched.some(m => m.category === 'penalty');
-
-        matched.forEach(k => { score += categories[k]?.weight || 0; });
 
         const prev = lines[idx - 1]?.text || '';
         const next = lines[idx + 1]?.text || '';
-        const nearbyPenalty = categories.penalty.regex.test(prev) || categories.penalty.regex.test(next);
-        const nearbyFormat = ['font','spacing','margin','page','decoration','toxic'].some(k => categories[k].regex.test(prev) || categories[k].regex.test(next));
+        const signal = inspectRiskSignals(text, prev, next, customMatchers);
+        let score = signal.score;
+        const matched = [...signal.matched];
+        const reason = [];
 
-        if (hasFormat && hasPenalty) score += 3;
-        if (hasFormat && nearbyPenalty) score += 2;
-        if (hasPenalty && nearbyFormat) score += 2;
-        if (safe) score -= 3;
+        if (signal.customMatched.length) customMatchCount += 1;
+        if (signal.learnMatched.length) learnMatchCount += 1;
+        if (signal.hasFormat) formatCount += 1;
+        if (signal.hasPenalty) penaltyCount += 1;
 
-        if (hasFormat) formatCount += 1;
-        if (hasPenalty) penaltyCount += 1;
+        const extraClause = standardComparison.additionalMap.get(line.lineNo);
+        if (extraClause) {
+          if (!matched.includes('standard')) matched.push('standard');
+          reason.push(`표준 기준서(${standardComparison.municipality}) 대비 추가 문구`);
+          const additionalToxic = signal.isToxicBySignals || additionalClauseToxicRegex.test(text);
+          if (additionalToxic) {
+            if (!signal.isToxicBySignals) score = Math.max(score, 5); // 추가문구 전용 판정으로 잡힌 경우 최소 점수 보장
+            score += 10;
+            standardAddedToxicCount += 1;
+            reason.push('추가 문구가 독소조항 신호와 결합되어 가중치 10 적용');
+          } else {
+            reason.push('추가 문구이지만 독소조항 신호는 약함');
+          }
+        }
 
-        const allMatched = [...new Set([...matched, ...customMatched.map(m => m.category)])];
+        if (signal.isNlpMatched) reason.push('🧠 구문분석: 조건-제재 결합 패턴 감지');
+        if (signal.hasFormat) reason.push('형식 제한 문구 포함');
+        if (signal.hasPenalty) reason.push('감점/실격 가능 문구 포함');
+        if ((signal.hasFormat && signal.nearbyPenalty) || (signal.hasPenalty && signal.nearbyFormat)) reason.push('인접 줄과 결합 시 독소조항 가능성');
+        if (signal.customMatched.length) reason.push(`사용자 키워드 ${signal.customMatched.length}건 일치`);
+        if (signal.learnMatched.length) reason.push(`학습 문구 유사도 ${(signal.learnMatched[0].similarity * 100).toFixed(0)}%`);
+        if (signal.safe) reason.push('제한 없음/완화 표현이 있어 위험도 조정');
+        if (extraClause?.bestClause) reason.push(`가장 유사한 기준 문구와 ${(extraClause.similarity * 100).toFixed(0)}% 일치`);
 
-        if (allMatched.length || learnMatched.length || isNlpMatched) {
+        if (matched.length || signal.learnMatched.length || signal.isNlpMatched) {
           let severity = 'low';
           if (score >= 10) severity = 'high';
           else if (score >= 5) severity = 'mid';
 
-          const reason = [];
-          if (isNlpMatched) reason.push('🧠 구문분석: 조건-제재 결합 패턴 감지');
-          if (hasFormat) reason.push('형식 제한 문구 포함');
-          if (hasPenalty) reason.push('감점/실격 가능 문구 포함');
-          if ((hasFormat && nearbyPenalty) || (hasPenalty && nearbyFormat)) reason.push('인접 줄과 결합 시 독소조항 가능성');
-          if (customMatched.length) reason.push(`사용자 키워드 ${customMatched.length}건 일치`);
-          if (learnMatched.length) reason.push(`학습 문구 유사도 ${(learnMatched[0].similarity * 100).toFixed(0)}%`);
-          if (safe) reason.push('제한 없음/완화 표현이 있어 위험도 조정');
-
           if (score > 1) {
-            findings.push({ ...line, matched: allMatched, customMatched, learnMatched: learnMatched.slice(0, 2), score: Math.max(0, score), severity, reason: reason.join(' · ') || '의심 문구 감지' });
+            findings.push({
+              ...line,
+              matched,
+              customMatched: signal.customMatched,
+              learnMatched: signal.learnMatched,
+              score: Math.max(0, score),
+              severity,
+              reason: reason.join(' · ') || '의심 문구 감지',
+              standardAdded: Boolean(extraClause),
+              standardMunicipality: standardComparison.municipality || '',
+              standardSimilarity: extraClause?.similarity ?? null,
+              standardBestClause: extraClause?.bestClause || ''
+            });
           }
         }
       });
@@ -662,14 +1235,29 @@
       const overallScore = findings.reduce((sum, f) => sum + f.score, 0);
 
       let overallRisk = '낮음';
-      if (overallScore >= 30 || toxicCount >= 2) overallRisk = '높음';
+      if (overallScore >= 30 || toxicCount >= 2 || standardAddedToxicCount >= 1) overallRisk = '높음';
       else if (overallScore >= 12 || midCount >= 2) overallRisk = '보통';
 
-      const checklist = buildChecklist(findings);
-      return { findings, formatCount, penaltyCount, learnMatchCount, customMatchCount, overallRisk, overallScore, checklist };
+      const checklist = buildChecklist(findings, standardComparison);
+      return {
+        findings,
+        formatCount,
+        penaltyCount,
+        learnMatchCount,
+        customMatchCount,
+        standardAddedCount,
+        standardAddedToxicCount,
+        standardComparisonEnabled: standardComparison.enabled,
+        standardMunicipality: standardComparison.municipality,
+        additionalClauses: standardComparison.additionalClauses || [],
+        overallRisk,
+        overallScore,
+        checklist
+      };
     }
 
-    function buildChecklist(findings) {
+    function buildChecklist(findings, standardComparison) {
+
       const set = new Set();
       findings.forEach(f => {
         if (f.matched.includes('font')) set.add('글자크기·글꼴·포인트를 실제 제출본 템플릿과 대조');
@@ -692,20 +1280,29 @@
       el('penaltyCount').textContent = result.penaltyCount;
       el('learnMatchCount').textContent = result.learnMatchCount;
       el('customMatchCount').textContent = result.customMatchCount;
+      el('standardAddedCount').textContent = result.standardAddedCount || 0;
+      el('standardAddedToxicCount').textContent = result.standardAddedToxicCount || 0;
 
       el('summaryBox').className = 'item';
-      el('summaryBox').innerHTML = `<div class="excerpt">종합 위험도는 <b>${result.overallRisk}</b>입니다. 의심 조항은 <b>점수 높은 순</b>으로 정렬되어 표시됩니다. 형식 제한 ${result.formatCount}건, 감점·실격 ${result.penaltyCount}건, 학습 일치 ${result.learnMatchCount}건, 사용자 키워드 일치 ${result.customMatchCount}건을 탐지했습니다.</div>`;
+      const compareText = result.standardComparisonEnabled
+        ? `선택 지자체 <b>${escapeHtml(result.standardMunicipality)}</b> 기준서와 함께 대조했습니다. 추가 문구 ${result.standardAddedCount}건 중 독소조항 판독 ${result.standardAddedToxicCount}건입니다.`
+        : '표준 기준서 대조는 실행되지 않았습니다. 지자체를 선택하면 일반 탐지와 함께 추가 문구 비교가 동작합니다.';
+      el('summaryBox').innerHTML = `<div class="excerpt">종합 위험도는 <b>${result.overallRisk}</b>입니다. 의심 조항은 <b>점수 높은 순</b>으로 정렬되어 표시됩니다. 형식 제한 ${result.formatCount}건, 감점·실격 ${result.penaltyCount}건, 학습 일치 ${result.learnMatchCount}건, 사용자 키워드 일치 ${result.customMatchCount}건을 탐지했습니다. ${compareText}</div>`;
 
-      if (!result.findings.length) el('findings').innerHTML = '<div class="empty">뚜렷한 의심 조항을 찾지 못했습니다.</div>';
+      // ── 의심 조항 목록 (standard 항목은 제외하고 순수 독소조항만 표시) ──
+      const pureFindings = result.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard'));
+      if (!pureFindings.length) el('findings').innerHTML = '<div class="empty">뚜렷한 의심 조항을 찾지 못했습니다.</div>';
       else {
-        el('findings').innerHTML = result.findings.map((f, idx) => {
+        el('findings').innerHTML = pureFindings.map((f, idx) => {
           const sev = f.severity === 'high' ? ['red','높음'] : f.severity === 'mid' ? ['yellow','보통'] : ['green','낮음'];
-          const badgeHtml = f.matched.map(k => {
-            const color = k === 'penalty' ? 'red' : k === 'toxic' ? 'purple' : 'blue';
-            return `<span class="badge ${color}">${escapeHtml(categories[k]?.label || k)}</span>`;
-          }).join('');
+          const badgeHtml = f.matched
+            .filter(k => k !== 'standard')
+            .map(k => {
+              const color = k === 'penalty' ? 'red' : k === 'toxic' ? 'purple' : 'blue';
+              return `<span class="badge ${color}">${escapeHtml(categories[k]?.label || k)}</span>`;
+            }).join('');
           const learnHtml = (f.learnMatched || []).map(m => `<div class="why">학습 일치: ${escapeHtml(m.clause)} (${(m.similarity * 100).toFixed(0)}%)</div>`).join('');
-          
+          const globalIdx = result.findings.indexOf(f);
           return `
             <div class="item clickable" data-line="${f.lineNo}" data-text="${escapeHtml(f.text)}">
               <div class="item-top">
@@ -715,7 +1312,7 @@
                   <span class="badge blue">줄 ${f.lineNo}</span>
                   ${badgeHtml}
                 </div>
-                <button class="secondary small" style="padding:4px 8px; font-size:11px;" onclick="event.stopPropagation(); window.markFalsePositive(${idx})">오탐지 제외</button>
+                <button class="secondary small" style="padding:4px 8px; font-size:11px;" onclick="event.stopPropagation(); window.markFalsePositive(${globalIdx})">오탐지 제외</button>
               </div>
               <div class="excerpt">${escapeHtml(f.text)}</div>
               <div class="why">${escapeHtml(f.reason)}</div>
@@ -729,6 +1326,46 @@
         });
       }
 
+      // ── 추가문구 목록 (기준서 대비 추가된 문구만 별도 표시) ──
+      const addClauses = result.additionalClauses || [];
+      const muni = result.standardMunicipality || '';
+      if (!result.standardComparisonEnabled) {
+        el('additionalHint').textContent = '기준서 대비 추가된 문구';
+        el('additionalFindings').innerHTML = '<div class="empty">지자체 기준서를 선택하고 분석하면 추가문구가 표시됩니다.</div>';
+      } else if (!addClauses.length) {
+        el('additionalHint').textContent = `${muni} 기준서 대조 완료`;
+        el('additionalFindings').innerHTML = '<div class="empty">기준서 대비 추가된 문구가 없습니다. 기준서와 잘 일치합니다.</div>';
+      } else {
+        el('additionalHint').textContent = `${muni} 기준 대비 ${addClauses.length}건`;
+        // 추가문구 중 독소조항 신호가 있는 것 먼저 정렬
+        const sorted = [...addClauses].sort((a, b) => {
+          const aT = result.findings.some(f => f.lineNo === a.lineNo && f.standardAdded && f.score > 5);
+          const bT = result.findings.some(f => f.lineNo === b.lineNo && f.standardAdded && f.score > 5);
+          return (bT ? 1 : 0) - (aT ? 1 : 0) || a.lineNo - b.lineNo;
+        });
+        el('additionalFindings').innerHTML = sorted.map((c, idx) => {
+          const isToxic = result.findings.some(f => f.lineNo === c.lineNo && f.standardAdded && f.score > 5);
+          const simPct = Math.round((c.similarity || 0) * 100);
+          return `
+            <div class="item clickable" data-text="${escapeHtml(c.text)}">
+              <div class="item-top">
+                <div class="badges">
+                  <span class="badge ${isToxic ? 'red' : 'yellow'}">${isToxic ? '⚠ 독소조항 의심' : '추가 문구'}</span>
+                  <span class="badge blue">줄 ${c.lineNo}</span>
+                  <span class="badge green">기준 일치율 ${simPct}%</span>
+                </div>
+                <span class="small" style="white-space:nowrap;">${idx + 1} / ${sorted.length}</span>
+              </div>
+              <div class="excerpt">${escapeHtml(c.text)}</div>
+              ${c.bestClause ? `<div class="why">가장 유사한 기준 문구: ${escapeHtml(c.bestClause)}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+        document.querySelectorAll('#additionalFindings .clickable').forEach(node => {
+          node.addEventListener('click', () => jumpToText(node.getAttribute('data-text')));
+        });
+      }
+
       if (!result.checklist.length) el('checklist').innerHTML = '<div class="empty">체크리스트가 없습니다.</div>';
       else el('checklist').innerHTML = result.checklist.map(item => `<div class="item"><div class="excerpt">• ${escapeHtml(item)}</div></div>`).join('');
 
@@ -736,6 +1373,7 @@
     }
 
     function jumpToText(targetText) {
+
       const textarea = el('sourceText');
       const plain = textarea.value;
       const text = targetText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
@@ -759,8 +1397,13 @@
     function doAnalyze() {
       const text = el('sourceText').value.trim();
       if (!text) return alert('분석할 문서를 먼저 입력해 주세요.');
-      incrementAnalyzeStats();
-      render(analyzeText(text));
+      const result = analyzeText(text);
+      incrementAnalyzeStats({
+        municipality: el('municipalitySelect').value || '',
+        hitCount: result.findings.length,
+        riskLabel: result.overallRisk
+      });
+      render(result);
     }
 
     // 🌟 [핵심 로직 추가] 줄바꿈 복원 및 문단 단위 스마트 정제 함수
@@ -797,17 +1440,25 @@
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const pages = [];
-      
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1 });
         const content = await page.getTextContent();
-        
+
+        // 페이지 하단 쪽 번호("- 7 -" 등)는 문서 생성 방식에 따라 본문 스트림의
+        // 맨 앞에 오기도 하고 맨 뒤에 오기도 해서, "줄 순서"로는 안전하게 걸러낼
+        // 수 없습니다. 대신 Y좌표가 페이지 하단 여백(대략 하단 5.5%) 안에 있는
+        // 텍스트는 통째로 건너뛰는 방식으로, 위치 기준으로 걸러냅니다.
+        const footerThreshold = viewport.height * 0.055;
+
         let pageText = '';
         let lastY = null;
-        
+
         content.items.forEach(item => {
           const currentY = item.transform[5]; // Y좌표 기반 줄바꿈 감지
-          
+          if (currentY < footerThreshold) return; // 하단 쪽 번호 영역은 건너뜀
+
           if (lastY !== null && Math.abs(currentY - lastY) > 5) {
             pageText += '\n'; // Y좌표 차이가 나면 새 줄로 간주
           }
@@ -826,34 +1477,81 @@
       return pages.join('\n');
     }
 
+    // hp:t(텍스트 run) 안에 <hp:fwSpace/> 같은 인라인 요소가 섞여 있으면 자식 노드가
+    // 여러 개가 되는데, 이 함수는 그 모든 자식을 순회해 텍스트는 그대로 이어붙이고
+    // 인라인 요소는 공백 한 칸으로 치환합니다. (이전 버전은 자식이 정확히 1개인
+    // hp:t만 인정해서, fwSpace가 섞인 run 전체의 텍스트를 통째로 버렸습니다.)
+    function extractHwpxRunText(node) {
+      let out = '';
+      Array.from(node.childNodes || []).forEach(child => {
+        out += (child.nodeType === Node.TEXT_NODE) ? (child.nodeValue || '') : ' ';
+      });
+      return out;
+    }
+
+    // 문단(hp:p) 하나에 속한 여러 run(hp:t)을 한 줄로 묶어 반환합니다. 표가 문단
+    // 내부에 중첩된 경우, 표 셀 안의 문단들은 각자 자신의 줄로 별도 처리되어야 하므로
+    // (재귀 중 만나는 하위 hp:p는) 여기서 직접 텍스트로 합치지 않고 collectHwpxLines가
+    // 별도의 줄로 push하도록 넘깁니다.
+    function collectHwpxParagraphInline(node, lines) {
+      if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || '';
+      if (!node.tagName) return '';
+      if (node.tagName === 'hp:t') return extractHwpxRunText(node);
+      if (node.tagName === 'hp:p') { collectHwpxLines(node, lines); return ''; }
+      let out = '';
+      Array.from(node.childNodes || []).forEach(child => {
+        out += collectHwpxParagraphInline(child, lines);
+      });
+      return out;
+    }
+
+    function collectHwpxLines(node, lines) {
+      if (node.tagName === 'hp:p') {
+        let buf = '';
+        Array.from(node.childNodes || []).forEach(child => {
+          buf += collectHwpxParagraphInline(child, lines);
+        });
+        const trimmed = buf.replace(/[^\S\r\n]+/g, ' ').trim();
+        if (trimmed) lines.push(trimmed);
+      } else {
+        Array.from(node.childNodes || []).forEach(child => collectHwpxLines(child, lines));
+      }
+    }
+
     async function extractTextFromHwpx(file) {
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
-      const sectionFiles = Object.keys(zip.files).filter(name => /\.xml$/i.test(name) && !/content\.hpf$/i.test(name)).sort();
+      // 본문(Contents/sectionN.xml)만 대상으로 합니다. header.xml(글머리 번호 서식 등),
+      // settings.xml(뷰어 설정값) 같은 파일도 확장자가 .xml이라 이전 버전에서는
+      // 함께 스캔되어 "^1.", "false", "100" 같은 본문과 무관한 텍스트가 섞여
+      // 들어가는 문제가 있었습니다.
+      const sectionFiles = Object.keys(zip.files)
+        .filter(name => /(^|\/)Contents\/section\d+\.xml$/i.test(name))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
       const texts = [];
       for (const name of sectionFiles) {
         const xmlText = await zip.files[name].async('string');
         const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
-        const nodeTexts = Array.from(doc.getElementsByTagName('*'))
-          .map(node => (node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE) ? node.textContent : '')
-          .filter(Boolean);
-        if (nodeTexts.length) texts.push(nodeTexts.join('\n'));
+        const lines = [];
+        collectHwpxLines(doc.documentElement, lines);
+        if (lines.length) texts.push(lines.join('\n'));
       }
       return texts.join('\n');
     }
 
-    async function handleDocumentFile(file) {
+    async function extractTextFromSupportedFile(file) {
       const ext = file.name.toLowerCase().split('.').pop();
+      let text = '';
+      if (ext === 'pdf') text = await extractTextFromPdf(file);
+      else if (ext === 'hwpx') text = await extractTextFromHwpx(file);
+      else text = await file.text();
+      return smartMergeLines(text).trim();
+    }
+
+    async function handleDocumentFile(file) {
       el('fileStatus').innerHTML = `불러오는 중: <b>${escapeHtml(file.name)}</b>`;
       try {
-        let text = '';
-        if (ext === 'pdf') text = await extractTextFromPdf(file);
-        else if (ext === 'hwpx') text = await extractTextFromHwpx(file);
-        else text = await file.text();
-        
-        // --- 🌟 여기서 공백 압축 및 문단 복원 처리 실행 ---
-        text = smartMergeLines(text);
-        
+        const text = await extractTextFromSupportedFile(file);
         el('sourceText').value = text.trim();
         el('fileStatus').innerHTML = `불러오기 완료: <b>${escapeHtml(file.name)}</b> · ${text.length.toLocaleString()}자 추출`;
         doAnalyze();
@@ -865,6 +1563,7 @@
     }
 
     function mergeLearnedClauses(newClauses) {
+
       const all = [...learnedClauses, ...newClauses];
       learnedClauses = [...new Set(all)];
       saveJson(LS_KEYS.learnedClauses, learnedClauses);
@@ -877,7 +1576,11 @@
       el('sourceText').value = '';
       el('summaryBox').className = 'empty'; el('summaryBox').textContent = '아직 분석 결과가 없습니다.';
       el('findings').innerHTML = '<div class="empty">분석을 실행하면 의심 조항이 높은 점수 순으로 정렬됩니다.</div>';
+      el('additionalFindings').innerHTML = '<div class="empty">지자체 기준서를 선택하고 분석하면 추가문구가 표시됩니다.</div>';
+      el('additionalHint').textContent = '기준서 대비 추가된 문구';
       el('checklist').innerHTML = '<div class="empty">분석 결과에 따라 체크리스트가 자동 생성됩니다.</div>';
+      el('standardAddedCount').textContent = '0';
+      el('standardAddedToxicCount').textContent = '0';
       window.__lastResult = null;
     });
 
@@ -896,8 +1599,8 @@
       event.target.value = '';
     });
 
-    el('openLearnFileBtn').addEventListener('click', () => {
-      if (!requireAdmin('학습 TXT 불러오기')) return;
+    el('openLearnFileBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('학습 TXT 불러오기'))) return;
       el('learnFileInput').click();
     });
 
@@ -910,26 +1613,39 @@
       event.target.value = '';
     });
 
-    el('addKeywordBtn').addEventListener('click', () => {
-      if (!requireAdmin('키워드 추가')) return;
+    el('addKeywordBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('키워드 추가'))) return;
       const keyword = el('customKeywordInput').value.trim();
       const category = el('customKeywordCategory').value;
       const weight = Number(el('customKeywordWeight').value || 2);
       if (!keyword) return alert('추가할 키워드를 입력해 주세요.');
-      customKeywords.push({ keyword, category, weight });
-      saveJson(LS_KEYS.customKeywords, customKeywords);
+      if (FIREBASE_READY) {
+        try {
+          await db.collection('keywords').add({ keyword, category, weight, addedAt: Date.now(), addedBy: ADMIN_EMAIL });
+        } catch (e) { console.error(e); alert('키워드 저장 중 오류가 발생했습니다.'); return; }
+      } else {
+        customKeywords.push({ keyword, category, weight });
+        saveJson(LS_KEYS.customKeywords, customKeywords);
+        renderCustomKeywords();
+      }
       el('customKeywordInput').value = ''; el('customKeywordWeight').value = 2;
-      renderCustomKeywords();
     });
 
-    el('resetKeywordBtn').addEventListener('click', () => {
-      if (!requireAdmin('키워드 초기화')) return;
+    el('resetKeywordBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('키워드 초기화'))) return;
       if (!confirm('사용자 키워드를 모두 삭제할까요?')) return;
-      customKeywords = []; saveJson(LS_KEYS.customKeywords, customKeywords); renderCustomKeywords();
+      if (FIREBASE_READY) {
+        const batch = db.batch();
+        const snap = await db.collection('keywords').get();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      } else {
+        customKeywords = []; saveJson(LS_KEYS.customKeywords, customKeywords); renderCustomKeywords();
+      }
     });
 
-    el('relearnBtn').addEventListener('click', () => {
-      if (!requireAdmin('입력문서로 보조학습')) return;
+    el('relearnBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('입력문서로 보조학습'))) return;
       const text = el('sourceText').value.trim();
       if (!text) return alert('문서 입력창에 텍스트가 있어야 보조학습할 수 있습니다.');
       const lines = parseLearnedClauses(text);
@@ -937,8 +1653,8 @@
       alert(`현재 입력문서에서 ${lines.length}건을 학습 데이터로 누적했습니다.`);
     });
 
-    el('clearLearnBtn').addEventListener('click', () => {
-      if (!requireAdmin('학습데이터 초기화')) return;
+    el('clearLearnBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('학습데이터 초기화'))) return;
       if (!confirm('학습된 독소조항 데이터를 모두 삭제할까요?')) return;
       learnedClauses = []; saveJson(LS_KEYS.learnedClauses, learnedClauses); renderCustomKeywords();
     });
@@ -948,10 +1664,159 @@
       falsePositives = []; saveJson(LS_KEYS.falsePositives, falsePositives); alert('초기화되었습니다.'); doAnalyze();
     });
 
-    renderCustomKeywords();
-    updateMemoStats();
+    el('addFeedbackBtn').addEventListener('click', async () => {
+      const text = el('feedbackInput').value.trim();
+      if (!text) return alert('피드백 내용을 입력해 주세요.');
+      const type = el('feedbackType').value;
+      const authorName = el('feedbackAuthorName').value.trim();
+      const authorDept = el('feedbackAuthorDept').value.trim();
+      const payload = { text, type, authorName, authorDept, createdAt: Date.now() };
+      if (FIREBASE_READY) {
+        try {
+          await db.collection('feedback').add(payload);
+        } catch (e) { console.error(e); alert('피드백 등록 중 오류가 발생했습니다.'); return; }
+      } else {
+        feedbackList.unshift(payload);
+        saveJson(LS_KEYS.feedbackList, feedbackList);
+        renderFeedbackList();
+      }
+      el('feedbackInput').value = '';
+      el('feedbackAuthorName').value = '';
+      el('feedbackAuthorDept').value = '';
+    });
+
+    el('addCaseShareBtn').addEventListener('click', async () => {
+      const clauseText = el('caseClauseText').value.trim();
+      if (!clauseText) return alert('공유할 독소조항 문구를 입력해 주세요.');
+      const category = el('caseCategory').value;
+      const note = el('caseNote').value.trim();
+      const authorName = el('caseAuthorName').value.trim();
+      const authorDept = el('caseAuthorDept').value.trim();
+      const payload = { clauseText, category, note, authorName, authorDept, createdAt: Date.now() };
+      if (FIREBASE_READY) {
+        try {
+          await db.collection('caseShares').add(payload);
+        } catch (e) { console.error(e); alert('사례 등록 중 오류가 발생했습니다.'); return; }
+      } else {
+        caseSharesList.unshift(payload);
+        saveJson(LS_KEYS.caseShares, caseSharesList);
+        renderCaseShares();
+      }
+      el('caseClauseText').value = '';
+      el('caseNote').value = '';
+      el('caseAuthorName').value = '';
+      el('caseAuthorDept').value = '';
+    });
+
+    el('refreshStandardsBtn').addEventListener('click', () => renderStandardLibraries());
+    el('municipalitySelect').addEventListener('change', () => {
+      updateStandardStatus();
+      if (el('sourceText').value.trim()) doAnalyze();
+    });
+
+    el('openStandardFileBtn').addEventListener('click', async () => {
+      if (!(await requireAdmin('지자체 기준서 업로드'))) return;
+      el('standardFileInput').click();
+    });
+
+    el('standardFileInput').addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (!(await requireAdmin('지자체 기준서 업로드'))) {
+        event.target.value = '';
+        return;
+      }
+      const municipality = el('municipalityInput').value.trim() || el('municipalitySelect').value.trim();
+      if (!municipality) {
+        alert('기준서를 연결할 지자체명을 먼저 입력하거나 선택해 주세요.');
+        event.target.value = '';
+        return;
+      }
+      try {
+        const text = await extractTextFromSupportedFile(file);
+        const clauses = parseStandardClauses(text);
+        const payload = { fileName: file.name, rawText: text, clauses, uploadedAt: Date.now(), uploadedBy: ADMIN_EMAIL };
+        if (FIREBASE_READY) {
+          await db.collection('standards').doc(municipality).set(payload);
+        } else {
+          standardLibraries[municipality] = payload;
+          saveJson(LS_KEYS.standardLibraries, standardLibraries);
+          renderStandardLibraries();
+        }
+        el('municipalityInput').value = municipality;
+        el('municipalitySelect').value = municipality;
+        updateStandardStatus();
+        alert(`${municipality} 기준서 ${clauses.length}건을 저장했습니다.${FIREBASE_READY ? ' (전 직원 공유)' : ''}`);
+        if (el('sourceText').value.trim()) doAnalyze();
+      } catch (error) {
+        console.error(error);
+        alert('기준서 업로드 중 오류가 발생했습니다.');
+      }
+      event.target.value = '';
+    });
+
+    window.removeStandardLibrary = async function(name) {
+      if (!standardLibraries[name]) return alert('해당 지자체 기준서를 찾을 수 없습니다.');
+      if (!(await requireAdmin('지자체 기준서 삭제'))) return;
+      if (!confirm(`${name} 기준서를 삭제할까요?`)) return;
+      if (FIREBASE_READY) {
+        await db.collection('standards').doc(name).delete();
+      } else {
+        delete standardLibraries[name];
+        saveJson(LS_KEYS.standardLibraries, standardLibraries);
+        renderStandardLibraries();
+      }
+      if (el('municipalityInput').value.trim() === name) el('municipalityInput').value = '';
+      if (el('sourceText').value.trim()) doAnalyze();
+    };
+
+    if (FIREBASE_READY) {
+      const shareNote = '• 이 데이터는 Firebase 공유 데이터베이스에 저장되어 <b>전 직원이 실시간으로 함께</b> 봅니다.';
+      if (el('feedbackStorageNote')) el('feedbackStorageNote').innerHTML = shareNote;
+      if (el('caseShareStorageNote')) el('caseShareStorageNote').innerHTML = shareNote;
+
+      db.collection('keywords').orderBy('addedAt', 'asc').onSnapshot(snap => {
+        customKeywords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderCustomKeywords();
+      }, err => console.error('키워드 동기화 오류:', err));
+
+      db.collection('standards').onSnapshot(snap => {
+        standardLibraries = {};
+        snap.forEach(d => { standardLibraries[d.id] = d.data(); });
+        renderStandardLibraries();
+      }, err => console.error('기준서 동기화 오류:', err));
+
+      db.collection('feedback').orderBy('createdAt', 'desc').limit(200).onSnapshot(snap => {
+        feedbackList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderFeedbackList();
+      }, err => console.error('피드백 동기화 오류:', err));
+
+      db.collection('caseShares').orderBy('createdAt', 'desc').limit(200).onSnapshot(snap => {
+        caseSharesList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderCaseShares();
+      }, err => console.error('사례공유 동기화 오류:', err));
+
+      db.collection('analysisLogs').orderBy('timestamp', 'desc').limit(20).onSnapshot(snap => {
+        recentAnalysisLogs = snap.docs.map(d => d.data());
+        renderAnalysisLogs();
+      }, err => console.error('분석기록 동기화 오류:', err));
+
+      db.collection('counters').doc('analysis').onSnapshot(doc => {
+        analyzeStats = doc.exists ? doc.data() : { dateKey: '', todayCount: 0, totalCount: 0 };
+        updateMemoStats();
+      }, err => console.error('분석횟수 동기화 오류:', err));
+    } else {
+      renderCustomKeywords();
+      renderStandardLibraries();
+      renderFeedbackList();
+      renderCaseShares();
+      renderAnalysisLogs();
+      updateMemoStats();
+    }
+    updateAdminUnlockButtons();
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
