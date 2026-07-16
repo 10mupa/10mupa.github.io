@@ -3,33 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PQ/QBS/TP/SOQ 독소조항 탐지기 · 확장판</title>
+  <title>KG 독소조항 탐지기 · 확장판</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #121933;
-      --panel-2: #182247;
-      --text: #e8ecf8;
-      --muted: #9faacc;
-      --primary: #67a3ff;
-      --danger: #ff6b6b;
-      --warning: #ffb454;
-      --ok: #4cd7a6;
-      --line: #2c3968;
-      --chip: #24335f;
-      --shadow: 0 20px 50px rgba(0,0,0,.25);
+      --bg: #eef1f6;
+      --panel: #ffffff;
+      --panel-2: #f6f8fc;
+      --text: #1c2434;
+      --muted: #6b7488;
+      --primary: #1b4f9c;
+      --primary-dark: #123869;
+      --danger: #e5484d;
+      --warning: #f5a524;
+      --ok: #12946a;
+      --line: #e2e6ee;
+      --chip: #eef2fb;
+      --shadow: 0 8px 24px rgba(16,24,40,.08);
+      --navy: #0f2a52;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
       color: var(--text);
-      background: linear-gradient(180deg, #09101f 0%, #0f1630 100%);
+      background: var(--bg);
+    }
+    .topbar {
+      background: linear-gradient(90deg, var(--navy), var(--primary));
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(15,42,82,.25);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo {
+      width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,.16);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
+      border: 1px solid rgba(255,255,255,.35);
+    }
+    .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+    .topbar-sub { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255,255,255,.85); }
+    .topbar-badge {
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); border-radius: 999px;
+      padding: 5px 12px; font-weight: 600;
     }
     .wrap {
       max-width: 1440px;
       margin: 0 auto;
-      padding: 28px 20px 60px;
+      padding: 24px 20px 60px;
     }
     .hero {
       display: grid;
@@ -38,49 +65,50 @@
       margin-bottom: 20px;
     }
     .card {
-      background: rgba(18,25,51,.92);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
       box-shadow: var(--shadow);
     }
-    .hero-main { padding: 26px; }
+    .hero-main { padding: 24px; }
     .hero-side {
       padding: 22px;
-      background: linear-gradient(180deg, rgba(24,34,71,.96), rgba(18,25,51,.96));
+      background: var(--panel-2);
     }
-    h1 { margin: 0 0 10px; font-size: 31px; line-height: 1.2; }
-    .sub { color: var(--muted); line-height: 1.65; font-size: 15px; }
+    h1 { margin: 0 0 10px; font-size: 26px; line-height: 1.25; color: var(--navy); }
+    .sub { color: var(--muted); line-height: 1.65; font-size: 14px; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .chip {
       background: var(--chip);
-      border: 1px solid rgba(255,255,255,.08);
-      color: #cbd7ff;
-      padding: 8px 12px;
+      border: 1px solid rgba(27,79,156,.14);
+      color: var(--primary);
+      padding: 7px 12px;
       border-radius: 999px;
-      font-size: 13px;
+      font-size: 12.5px;
+      font-weight: 600;
     }
     .grid { display: grid; grid-template-columns: 1.18fr .82fr; gap: 18px; }
     .panel { padding: 20px; }
     .section-title {
       display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;
     }
-    .section-title h2 { margin: 0; font-size: 20px; }
-    .hint { color: var(--muted); font-size: 13px; }
-    textarea, select, input[type="text"], input[type="number"] {
+    .section-title h2 { margin: 0; font-size: 18px; color: var(--navy); }
+    .hint { color: var(--muted); font-size: 12.5px; }
+    textarea, select, input[type="text"], input[type="number"], input[type="password"] {
       width: 100%;
-      background: #0d1430;
+      background: #fbfcfe;
       color: var(--text);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 11px 13px;
       font-size: 14px;
       line-height: 1.6;
       outline: none;
     }
     textarea { min-height: 420px; resize: vertical; }
-    textarea:focus, select:focus, input[type="text"]:focus, input[type="number"]:focus {
+    textarea:focus, select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(103,163,255,.15);
+      box-shadow: 0 0 0 3px rgba(27,79,156,.14);
     }
     .controls, .row, .toolbar {
       display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -88,56 +116,58 @@
     .toolbar { margin-top: 12px; }
     .row > * { flex: 1 1 180px; }
     button, .file-label {
-      appearance: none; border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; cursor: pointer;
-      transition: .2s ease; font-size: 14px;
+      appearance: none; border: 0; border-radius: 10px; padding: 10px 15px; font-weight: 700; cursor: pointer;
+      transition: .15s ease; font-size: 13.5px;
     }
-    .primary { background: linear-gradient(135deg, #6aa7ff, #4f7cff); color: white; }
+    .primary { background: linear-gradient(135deg, #2f6fd1, var(--primary)); color: #fff; }
     .secondary {
-      background: #23315d; color: #dde5ff; border: 1px solid rgba(255,255,255,.08);
+      background: #eef2fb; color: var(--primary-dark); border: 1px solid var(--line);
     }
-    .danger-btn { background: rgba(255,107,107,.18); color: #ffd3d3; border: 1px solid rgba(255,107,107,.2); }
-    button:hover, .file-label:hover { transform: translateY(-1px); }
+    .danger-btn { background: rgba(229,72,77,.1); color: #b3272b; border: 1px solid rgba(229,72,77,.22); }
+    .ok-btn { background: rgba(18,148,106,.1); color: #0d7a56; border: 1px solid rgba(18,148,106,.22); }
+    .ai-btn { background: rgba(124,58,237,.1); color: #6d28d9; border: 1px solid rgba(124,58,237,.22); }
+    button:hover, .file-label:hover { transform: translateY(-1px); filter: brightness(0.98); }
     input[type="file"] { display: none; }
-    .note { margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .note { margin-top: 12px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
     .stats {
       display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px;
     }
     .stat {
-      background: #0d1430; border: 1px solid var(--line); border-radius: 16px; padding: 16px;
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 15px;
     }
-    .stat .label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
-    .stat .value { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
-    .risk-high { color: var(--danger); }
-    .risk-mid { color: var(--warning); }
-    .risk-low { color: var(--ok); }
+    .stat .label { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
+    .stat .value { font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+    .risk-high { color: var(--danger) !important; }
+    .risk-mid { color: var(--warning) !important; }
+    .risk-low { color: var(--ok) !important; }
     .list, .checklist, .keyword-list { display: flex; flex-direction: column; gap: 10px; }
     .item {
       border: 1px solid var(--line);
-      background: #0d1430;
-      border-radius: 16px;
+      background: var(--panel-2);
+      border-radius: 14px;
       padding: 14px;
       position: relative;
     }
     .item.clickable { cursor: pointer; }
-    .item.clickable:hover { border-color: #4f7cff; }
+    .item.clickable:hover { border-color: var(--primary); }
     .item-top {
       display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px;
     }
     .badges { display: flex; flex-wrap: wrap; gap: 8px; }
     .badge {
-      padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,.08);
+      padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; border: 1px solid rgba(0,0,0,.04);
     }
-    .badge.red { background: rgba(255,107,107,.14); color: #ff9c9c; }
-    .badge.yellow { background: rgba(255,180,84,.14); color: #ffd191; }
-    .badge.blue { background: rgba(103,163,255,.14); color: #bad1ff; }
-    .badge.green { background: rgba(76,215,166,.14); color: #9cf0cf; }
-    .badge.purple { background: rgba(171,125,255,.16); color: #ddc7ff; }
+    .badge.red { background: rgba(229,72,77,.1); color: #b3272b; }
+    .badge.yellow { background: rgba(245,165,36,.14); color: #93590a; }
+    .badge.blue { background: rgba(27,79,156,.1); color: var(--primary-dark); }
+    .badge.green { background: rgba(18,148,106,.12); color: #0d7a56; }
+    .badge.purple { background: rgba(124,58,237,.12); color: #6d28d9; }
     .excerpt {
-      color: #f2f5ff; line-height: 1.68; white-space: pre-wrap; word-break: break-word;
+      color: #1c2434; line-height: 1.68; white-space: pre-wrap; word-break: break-word;
     }
-    .why { color: var(--muted); font-size: 13px; line-height: 1.6; margin-top: 8px; }
+    .why { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin-top: 8px; }
     .empty {
-      border: 1px dashed var(--line); color: var(--muted); text-align: center; padding: 40px 16px; border-radius: 16px; background: rgba(13,20,48,.5);
+      border: 1px dashed var(--line); color: var(--muted); text-align: center; padding: 40px 16px; border-radius: 14px; background: var(--panel-2);
     }
     .footer { margin-top: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
     .feedback-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -145,59 +175,81 @@
     .feedback-input { flex: 3 1 420px; }
     .feedback-meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
     .small { font-size: 12px; color: var(--muted); }
-    .topline { font-size: 14px; color: #d9e3ff; margin-bottom: 4px; }
+    .topline { font-size: 13px; color: var(--primary); font-weight: 700; margin-bottom: 4px; }
     .keyword-box, .library-box {
-      margin-top: 14px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px;
+      margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px;
     }
     .keyword-box summary, .library-box summary {
-      cursor: pointer; color: #dbe4ff; font-weight: 700; margin-bottom: 10px;
+      cursor: pointer; color: var(--navy); font-weight: 700; margin-bottom: 10px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
     .admin-unlock-btn {
-      appearance: none; border: 1px solid rgba(255,255,255,.08); border-radius: 999px;
+      appearance: none; border: 1px solid var(--line); border-radius: 999px;
       padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
-      background: #23315d; color: #dde5ff;
+      background: #eef2fb; color: var(--primary-dark);
     }
     .admin-unlock-btn:hover { transform: translateY(-1px); }
     .keyword-box p, .library-box p { color: var(--muted); font-size: 13px; line-height: 1.6; }
     code {
-      background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 6px; color: #d9e6ff;
+      background: rgba(27,79,156,.08); padding: 2px 6px; border-radius: 6px; color: var(--primary-dark);
     }
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .pill {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; background: #0d1430; border: 1px solid var(--line); border-radius: 999px; color: #dbe4ff; font-size: 12px; cursor: pointer; transition: 0.2s;
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; color: var(--navy); font-size: 12px; cursor: pointer; transition: 0.15s;
     }
-    .pill.active { background: #23315d; border-color: var(--primary); font-weight: bold; }
-    .status-good { color: #9cf0cf; }
-    .status-warn { color: #ffd191; }
+    .pill.active { background: #dfe9fb; border-color: var(--primary); font-weight: bold; }
+    .status-good { color: var(--ok); }
+    .status-warn { color: #93590a; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { flex: 0 0 130px; font-size: 12.5px; color: var(--text); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; background: var(--panel-2); border-radius: 999px; height: 18px; overflow: hidden; border: 1px solid var(--line); }
+    .bar-fill { height: 100%; border-radius: 999px; display: flex; align-items: center; }
+    .bar-value { flex: 0 0 46px; font-size: 12px; color: var(--muted); font-weight: 700; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .ai-result { margin-top: 8px; padding: 10px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.6; border: 1px solid var(--line); background: rgba(124,58,237,.05); }
     @media (max-width: 1200px) {
       #resultsGrid { grid-template-columns: 1fr 1fr !important; }
     }
     @media (max-width: 1080px) {
-      .hero, .grid, .split { grid-template-columns: 1fr; }
+      .hero, .grid, .split, .dashboard-grid { grid-template-columns: 1fr; }
       #resultsGrid { grid-template-columns: 1fr !important; }
-      h1 { font-size: 28px; }
+      h1 { font-size: 22px; }
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">KG</div>
+      <div>
+        <div class="topbar-title">독소조항 탐지기</div>
+        <div class="topbar-sub">PQ / QBS / TP / SOQ 사전검토용 · 확장판</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge" id="topbarSyncBadge">공유 DB 연결 확인 중…</span>
+    </div>
+  </div>
   <div class="wrap">
     <section class="hero">
       <div class="card hero-main">
         <div class="topline">입찰공고문 · 작성기준서 · 평가기준서 점검용</div>
         <h1>PQ/QBS/TP/SOQ 독소조항 탐지기 · 사전확장판</h1>
         <div class="sub">
-          형식 제한과 감점 문구를 함께 찾아내고, <b>사용자 키워드</b>와 <b>독소조항 누적 TXT</b>를 학습해 위험도를 높여 잡는 버전입니다.
-          <b>PDF / HWPX / TXT / MD / HTML</b> 업로드를 지원합니다.
+          형식 제한과 감점 문구는 물론, 실적·자격 과다 제한·과다 배상책임·지식재산권 부당이관 문구까지 함께 찾아내고,
+          <b>사용자 키워드</b>와 <b>독소조항 누적 학습 문구</b>를 반영해 위험도를 정교하게 산출하는 버전입니다.
+          <b>PDF / HWPX / TXT / MD / HTML</b> 업로드를 지원하며, Gemini API 키를 설정하면 분석 직후 <b>AI가 자동으로 재검토</b>하여
+          실제 독소조항으로 확인된 문구만 골라서 보여줍니다.
         </div>
         <div class="chips">
           <span class="chip">점수 높은 순 정렬</span>
-          <span class="chip">스마트 문단 추출 기능</span>
-          <span class="chip">사용자 키워드 저장</span>
-          <span class="chip">독소조항 TXT 학습</span>
-          <span class="chip">클릭 시 자동 스크롤 이동</span>
-          <span class="chip">오탐지 필터 및 등록 기능</span>
+          <span class="chip">스마트 문단 추출</span>
+          <span class="chip">실적·자격 과다제한 탐지</span>
+          <span class="chip">AI 자동 필터링(선택)</span>
+          <span class="chip">전 직원 오탐지 화이트리스트</span>
+          <span class="chip">통계 대시보드(최근 6개월)</span>
+          <span class="chip">엑셀 체크리스트 내보내기</span>
         </div>
       </div>
       <aside class="card hero-side">
@@ -205,14 +257,14 @@
         <div class="sub">
           <ul>
             <li>형식 제한 + 감점 문구가 결합되면 위험도 가중</li>
-            <li>구문 분석 (조건-제재) 패턴 감지 시 점수 가중</li>
-            <li>학습 TXT의 문구와 유사한 줄은 추가 가점</li>
-            <li>사용자 키워드는 브라우저에 저장되어 재접속 후에도 유지</li>
-            <li>목차, 안내문구 등 일반 구조어는 오탐지 필터로 자동 제외됨</li>
+            <li>실적·자격 과다제한, 과다 배상책임, 지식재산권 부당이관도 별도 카테고리로 탐지</li>
+            <li>학습 문구와 유사한 줄은 추가 가점, 표준 기준서 대비 추가 문구는 가중치 10 부여</li>
+            <li>사용자 키워드·학습 문구는 전 직원 공유 DB에 저장되어 재접속 후에도 유지</li>
+            <li>5명 이상이 같은 문구를 오탐지로 신고하면 관리자 승인 후 전사 화이트리스트로 자동 정화</li>
           </ul>
         </div>
-        <div class="small" id="memoStats" style="margin-top:14px; color:#dbe4ff;">-</div>
-        <div class="small" style="margin-top:6px; color:#dbe4ff;">관리자 이메일: <a href="mailto:isr2957@naver.com" style="color:#bad1ff; text-decoration:none;">isr2957@naver.com</a></div>
+        <div class="small" id="memoStats" style="margin-top:14px; color: var(--navy);">-</div>
+        <div class="small" style="margin-top:6px; color: var(--navy);">관리자 이메일: <a href="mailto:isr2957@naver.com" style="color: var(--primary); text-decoration:none;">isr2957@naver.com</a></div>
       </aside>
     </section>
 
@@ -227,12 +279,13 @@
           <select id="municipalitySelect" style="flex: 0 1 160px; min-width: 120px;">
             <option value="">지자체 선택 안 함</option>
           </select>
+          <label class="file-label secondary" for="fileInput">문서 불러오기</label>
+          <input type="file" id="fileInput" accept=".txt,.md,.html,.htm,.pdf,.hwpx" />
           <button class="primary" id="analyzeBtn">독소조항 분석</button>
           <button class="secondary" id="sampleBtn">샘플 불러오기</button>
           <button class="secondary" id="clearBtn">초기화</button>
-          <button class="secondary" id="downloadBtn">결과 다운로드</button>
-          <label class="file-label secondary" for="fileInput">문서 불러오기</label>
-          <input type="file" id="fileInput" accept=".txt,.md,.html,.htm,.pdf,.hwpx" />
+          <button class="secondary" id="downloadBtn">TXT 다운로드</button>
+          <button class="ok-btn" id="excelDownloadBtn">엑셀 체크리스트 다운로드</button>
         </div>
         <div class="note" id="fileStatus">
           • PDF/HWPX 추출 시 줄바꿈 복원 및 스마트 문단 정제가 자동 적용됩니다.<br/>
@@ -265,7 +318,7 @@
                 <input type="file" id="standardFileInput" accept=".txt,.md,.html,.htm,.pdf,.hwpx" />
               </div>
               <div class="note">
-                • 지자체별 작성 기준서는 현재 브라우저 저장소에 보관됩니다.<br/>
+                • 지자체별 작성 기준서는 공유 DB(Firestore)에 보관되어 전 직원이 함께 봅니다.<br/>
                 • 분석 시 표준 기준서에 없는 추가 문구를 찾고, 독소조항으로 판독되면 <b>가중치 10</b>을 추가합니다.
               </div>
             </div>
@@ -295,6 +348,9 @@
                   <option value="decoration">치장 제한</option>
                   <option value="penalty">감점/실격</option>
                   <option value="toxic">독소조항 일반</option>
+                  <option value="qualification">실적/자격 과다제한</option>
+                  <option value="liability">과다 배상·하자책임</option>
+                  <option value="ip">지식재산권 부당이관</option>
                 </select>
               </div>
               <div class="row" style="margin-top:10px;">
@@ -315,8 +371,8 @@
                 <button class="danger-btn" id="clearLearnBtn">학습데이터 초기화</button>
               </div>
               <div class="note">
-                • 최근 학습된 문구는 브라우저 저장소에 누적 저장됩니다.<br/>
-                <button class="danger-btn" id="clearFalsePositivesBtn" style="padding:4px 8px; font-size:11px; margin-top:8px;">수동 오탐지 제외 기록 초기화</button>
+                • 학습 문구는 공유 DB(Firestore)에 누적 저장되어 전 직원이 함께 활용합니다.<br/>
+                <button class="danger-btn" id="clearFalsePositivesBtn" style="padding:4px 8px; font-size:11px; margin-top:8px;">내 오탐지 제외 기록 초기화(이 브라우저만)</button>
               </div>
             </div>
           </div>
@@ -328,6 +384,44 @@
 
           <div id="customKeywords" class="keyword-list" style="margin-top:14px;"></div>
           <div id="learnedKeywords" class="keyword-list" style="margin-top:14px; display:none;"></div>
+        </details>
+
+        <details class="keyword-box">
+          <summary>
+            <span>🛡 글로벌 오탐지 화이트리스트 관리</span>
+            <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
+          </summary>
+          <p>
+            여러 직원이 같은 문구를 <b>[오탐지 제외]</b> 처리하면 자동으로 후보에 오릅니다. 서로 다른 사용자 <b>5명 이상</b>이 동일 문구를
+            오탐지로 신고하면 아래 후보 목록에 나타나며, 관리자가 승인하면 <b>전사 화이트리스트</b>에 등록되어
+            이후 모든 직원의 분석 결과에서 자동으로 제외됩니다.
+          </p>
+          <div class="toolbar">
+            <span class="pill">화이트리스트 승인 대기 <b id="candidateCount">0</b>건</span>
+            <span class="pill">전사 화이트리스트 등록 <b id="whitelistCount">0</b>건</span>
+          </div>
+          <div id="candidateList" class="keyword-list" style="margin-top:14px;">
+            <div class="empty">아직 5명 이상이 신고한 오탐지 후보가 없습니다.</div>
+          </div>
+          <div id="whitelistList" class="keyword-list" style="margin-top:14px;"></div>
+        </details>
+
+        <details class="keyword-box" id="aiSettingsBox">
+          <summary>
+            <span>🤖 AI 자동 필터링 (Gemini, 전 직원 공통 적용)</span>
+          </summary>
+          <p>
+            [독소조항 분석] 버튼을 누르면 사전·정규식으로 탐지된 후보 문구들을 <b>사내 AI 프록시(Cloudflare Worker)를 거쳐 Google Gemini가 다시 검토</b>하여,
+            실제로 독소조항이라고 판단한 문구만 최종 목록에 남깁니다. <b>Gemini API 키는 이 파일이나 브라우저 어디에도 저장되지 않고
+            서버(Worker) 안에만 있으며</b>, 각 직원이 개별로 키를 설정할 필요 없이 관리자가 한 번 배포해두면 전 직원에게 자동 적용됩니다.
+            탐지된 후보 문구(및 앞뒤 한 줄)만 전송되고 문서 전체는 전송되지 않습니다.
+          </p>
+          <div class="toolbar">
+            <label class="pill" style="cursor:pointer;">
+              <input type="checkbox" id="aiAutoFilterToggle" style="margin:0;" /> 분석 시 AI 자동 필터링 사용 (기본 켜짐)
+            </label>
+          </div>
+          <div class="note" id="aiSettingsStatus">-</div>
         </details>
       </div>
 
@@ -341,10 +435,10 @@
           <div class="stat"><div class="label">탐지된 의심 조항</div><div id="hitCount" class="value">0</div></div>
           <div class="stat"><div class="label">형식 제한 조항</div><div id="formatCount" class="value">0</div></div>
           <div class="stat"><div class="label">감점·실격 조항</div><div id="penaltyCount" class="value">0</div></div>
+          <div class="stat"><div class="label">실적·자격 등 과다제한</div><div id="unfairCount" class="value">0</div></div>
           <div class="stat"><div class="label">학습 일치 조항</div><div id="learnMatchCount" class="value">0</div></div>
           <div class="stat"><div class="label">사용자 키워드 일치</div><div id="customMatchCount" class="value">0</div></div>
-          <div class="stat"><div class="label">기준서 추가 문구</div><div id="standardAddedCount" class="value">0</div></div>
-          <div class="stat"><div class="label">추가 문구 독소조항</div><div id="standardAddedToxicCount" class="value">0</div></div>
+          <div class="stat"><div class="label">기준서 추가 문구(독소)</div><div id="standardAddedToxicCount" class="value">0</div></div>
         </div>
         <div id="summaryBox" class="empty">아직 분석 결과가 없습니다.</div>
       </div>
@@ -356,6 +450,7 @@
           <h2>의심 조항 목록</h2>
           <span class="hint">점수 순 · 클릭 시 자동 스크롤</span>
         </div>
+        <div class="note" id="aiFilterStatus" style="margin-top:0; margin-bottom:10px;">• AI 자동 필터링이 꺼져 있습니다. 사전·정규식 탐지 결과를 그대로 표시합니다.</div>
         <div id="findings" class="list">
           <div class="empty">분석을 실행하면 의심 조항이 높은 점수 순으로 정렬됩니다.</div>
         </div>
@@ -384,9 +479,45 @@
           <summary>사전 확장 키워드 보기</summary>
           <p>
             기본 사전은 다음 영역을 넓게 포함합니다.<br/>
-            글씨체, 글꼴, 폰트, 서체, 명조, 고딕, 줄간격, 자간, 장평, 여백, 양식, A4, 페이지 수, 간지, 제본, 양면, 색상, 워드아트, 감점, 실격, 무효, 평가 제외, 반려, 미준수, 위반 시, 초과 시 등.
+            글씨체, 글꼴, 폰트, 서체, 명조, 고딕, 줄간격, 자간, 장평, 여백, 양식, A4, 페이지 수, 간지, 제본, 양면, 색상, 워드아트,
+            감점, 실격, 무효, 평가 제외, 반려, 미준수, 위반 시, 초과 시, 실적/자격 과다제한, 지역제한, 신용평가등급,
+            손해배상액의 예정, 하자보수보증금, 지식재산권 귀속 등.
           </p>
         </details>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top:18px; grid-template-columns: 1fr;">
+      <div class="card panel">
+        <div class="section-title">
+          <h2>통계 대시보드</h2>
+          <span class="hint">지자체별 분석 건수 · 위험도 분포 · 자주 걸리는 카테고리</span>
+        </div>
+        <div class="toolbar" style="margin-bottom:14px;">
+          <select id="dashboardPeriodSelect" style="flex:0 1 160px;">
+            <option value="1">최근 1개월</option>
+            <option value="3">최근 3개월</option>
+            <option value="6" selected>최근 6개월</option>
+            <option value="12">최근 12개월</option>
+            <option value="0">전체 기간</option>
+          </select>
+          <button class="secondary" id="refreshDashboardBtn" type="button">대시보드 새로고침</button>
+          <span class="small" id="dashboardMeta">-</span>
+        </div>
+        <div class="dashboard-grid">
+          <div>
+            <div class="small" style="margin-bottom:10px; font-weight:700; color:var(--navy);">지자체별 분석 건수</div>
+            <div id="chartMunicipality"><div class="empty">아직 데이터가 없습니다.</div></div>
+          </div>
+          <div>
+            <div class="small" style="margin-bottom:10px; font-weight:700; color:var(--navy);">위험도 분포</div>
+            <div id="chartRisk"><div class="empty">아직 데이터가 없습니다.</div></div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <div class="small" style="margin-bottom:10px; font-weight:700; color:var(--navy);">가장 자주 걸리는 카테고리</div>
+          <div id="chartCategory"><div class="empty">아직 데이터가 없습니다.</div></div>
+        </div>
       </div>
     </section>
 
@@ -439,6 +570,9 @@
                 <option value="decoration">치장 제한</option>
                 <option value="penalty">감점/실격</option>
                 <option value="toxic">독소조항 일반</option>
+                <option value="qualification">실적/자격 과다제한</option>
+                <option value="liability">과다 배상·하자책임</option>
+                <option value="ip">지식재산권 부당이관</option>
               </select>
             </div>
             <textarea id="caseClauseText" style="min-height:80px; margin-top:10px;" maxlength="500" placeholder="발견한 독소조항 문구를 그대로 붙여넣으세요."></textarea>
@@ -476,13 +610,14 @@
 
     <div class="footer">
       ※ 공고문·기준서 본문의 분석은 항상 사용자 PC(브라우저) 내부에서만 이루어집니다.<br/>
-      ※ 표준 기준서·탐지 키워드·분석횟수·피드백·독소조항 사례는 전 직원 공유를 위해 Firebase 데이터베이스에 저장됩니다.<br/>
+      ※ 표준 기준서·탐지 키워드·학습 문구·분석횟수·피드백·독소조항 사례·오탐지 신고 데이터는 전 직원 공유를 위해 Firebase 데이터베이스에 저장됩니다.<br/>
+      ※ AI 자동 필터링 기능을 켜면 <b>탐지된 후보 문구(및 앞뒤 한 줄)만</b> 사내 AI 프록시(Cloudflare Worker)를 거쳐 Google Gemini로 전송됩니다. 꺼두면 전송되지 않습니다.<br/>
       Copyright 2026 KG Technova All rights reserved.
     </div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -491,7 +626,8 @@
 
     // ============================================================
     // Firebase 설정 (공유 데이터베이스: 표준 기준서 / 키워드 사전 /
-    // 분석횟수 기록 / 한줄 피드백 / 독소조항 사례 공유)
+    // 학습 문구 / 분석횟수 기록 / 한줄 피드백 / 독소조항 사례 공유 /
+    // 오탐지 신고 / 글로벌 화이트리스트)
     // ------------------------------------------------------------
     // 1) https://console.firebase.google.com 에서 프로젝트를 새로 만듭니다.
     // 2) [프로젝트 설정 > 일반 > 내 앱] 에서 웹 앱을 추가하고 아래 값을 복사해 넣습니다.
@@ -500,7 +636,11 @@
     // 3) [빌드 > Firestore Database] 에서 데이터베이스를 생성합니다.
     // 4) [빌드 > Authentication > Sign-in method] 에서 "이메일/비밀번호"를 사용 설정하고,
     //    [Users] 탭에서 관리자 계정을 1개 만듭니다. 이메일은 아래 ADMIN_EMAIL과 반드시 일치시키세요.
-    // 5) Firestore 규칙(Rules) 탭에 이 파일과 함께 제공된 firestore.rules 내용을 붙여넣습니다.
+    // 5) Firestore 규칙(Rules) 탭에 firestore.rules 내용을 붙여넣습니다. 이번 업데이트로
+    //    learnedClauses / falsePositiveReports / globalWhitelist 컬렉션이 새로 추가되었으니
+    //    규칙에도 반드시 반영해야 합니다 (읽기: 누구나, 쓰기: learnedClauses는 관리자만,
+    //    falsePositiveReports는 로그인 없이도 추가 가능하되 관리자만 삭제, globalWhitelist는
+    //    관리자만 쓰기).
     // ============================================================
     const firebaseConfig = {
       apiKey: "AIzaSyD5ps10QKLcJb0EjtuO99UDcjSc0NqPHEc",
@@ -512,6 +652,21 @@
     };
     const ADMIN_EMAIL = 'solesaerom@gmail.com'; // Firebase Authentication에 이 이메일로 관리자 계정을 만들어 두세요.
     const FIREBASE_READY = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY';
+    const GLOBAL_WHITELIST_THRESHOLD = 5; // 서로 다른 신고자가 이 수 이상이면 승인 후보로 올라옵니다.
+
+    // ============================================================
+    // AI 자동 필터링용 프록시 주소 (Cloudflare Worker)
+    // ------------------------------------------------------------
+    // Gemini API 키는 절대 이 파일에 넣지 마세요. 대신 Cloudflare Worker를 배포해
+    // 그 서버가 키를 갖고 Gemini를 대신 호출하도록 하고, 여기에는 그 Worker의
+    // 공개 URL만 적어둡니다 (예: https://toxcop-ai-proxy.YOUR-SUBDOMAIN.workers.dev).
+    // 이 URL 자체는 비밀값이 아니라서 코드에 그대로 넣어도 안전합니다 — 실제 보안은
+    // Worker 안의 GEMINI_API_KEY(서버측 비밀값)와 Origin 제한이 담당합니다.
+    // 비워두면 AI 자동 필터링 없이 사전·정규식 탐지 결과만 그대로 표시됩니다.
+    // 배포 방법은 함께 제공된 gemini-proxy-worker.js를 참고하세요.
+    // ============================================================
+    const GEMINI_PROXY_URL = ''; // 예: 'https://toxcop-ai-proxy.your-subdomain.workers.dev'
+    const GEMINI_MODEL = 'gemini-2.5-flash';
 
     let db = null, auth = null;
     if (FIREBASE_READY) {
@@ -528,12 +683,17 @@
       analyzeStats: 'toxcop.analyzeStats.v1',
       feedbackList: 'toxcop.feedbackList.v1',
       standardLibraries: 'toxcop.standardLibraries.v1',
-      caseShares: 'toxcop.caseShares.v1'
+      caseShares: 'toxcop.caseShares.v1',
+      localAnalysisLogs: 'toxcop.localAnalysisLogs.v1',
+      globalWhitelistLocal: 'toxcop.globalWhitelistLocal.v1',
+      reporterId: 'toxcop.reporterId.v1',
+      aiAutoFilter: 'toxcop.geminiAutoFilter.v1',
+      dashboardMonths: 'toxcop.dashboardMonths.v1'
     };
     const ADMIN_PASSWORD = '2957';
     let adminUnlocked = false;
 
-    const sampleText = `Ⅰ. 기술인평가서 작성지침\n1. 본문은 휴먼명조 12포인트, 줄간격 160%로 작성하여야 한다.\n2. 대제목은 16포인트, 소제목은 14포인트로 한다.\n3. 용지는 A4 규격으로 하며 좌우여백 20mm, 상하여백 15mm를 준수한다.\n4. 표지 및 간지를 제외한 본문은 20쪽 이내로 작성한다.\n5. 본문에는 임의의 색상, 음영, 테두리, 워드아트 등 과도한 치장을 금지한다.\n6. 상기 작성기준을 위반한 경우 항목당 1점 감점한다.\n7. 페이지 수를 초과하거나 지정 양식을 위반한 경우 평가에서 제외할 수 있다.\n8. 단, 표와 그림 내 글자크기는 제한 없음.`;
+    const sampleText = `Ⅰ. 기술인평가서 작성지침\n1. 본문은 휴먼명조 12포인트, 줄간격 160%로 작성하여야 한다.\n2. 대제목은 16포인트, 소제목은 14포인트로 한다.\n3. 용지는 A4 규격으로 하며 좌우여백 20mm, 상하여백 15mm를 준수한다.\n4. 표지 및 간지를 제외한 본문은 20쪽 이내로 작성한다.\n5. 본문에는 임의의 색상, 음영, 테두리, 워드아트 등 과도한 치장을 금지한다.\n6. 상기 작성기준을 위반한 경우 항목당 1점 감점한다.\n7. 페이지 수를 초과하거나 지정 양식을 위반한 경우 평가에서 제외할 수 있다.\n8. 단, 표와 그림 내 글자크기는 제한 없음.\n9. 참여 기술인은 최근 5년간 동일 규모 실적을 3건 이상 보유하여야 하며, 미보유 시 실격 처리한다.\n10. 계약 목적물에 대한 지식재산권 일체는 발주자에게 귀속되며 수급인은 어떠한 권리도 주장할 수 없다.`;
 
     const categories = {
       font: { label: '폰트/글자크기', weight: 2, regex: /(글씨체|글꼴|폰트|서체|고딕|명조|휴먼명조|맑은\s?고딕|바탕|돋움|포인트|pt\b|글자\s?크기|글씨\s?크기|본문\s?\d+\s?포인트|대제목|소제목)/i },
@@ -543,9 +703,15 @@
       decoration: { label: '치장 제한', weight: 2, regex: /(색상|칼라|컬러|음영|테두리|밑줄|굵게|볼드|기울임|워드아트|장식|도형|배경색|형광펜|삽도|장평\s?조정|색지)/i },
       penalty: { label: '감점/실격', weight: 3, regex: /(감점|실격|무효|평가\s?제외|불이익|반려|인정하지\s?않|미준수|위반\s?시|초과\s?시|제외할\s?수\s?있다|감액|배제|탈락|미반영|박탈|자격[^\n]{0,4}(?:상실|제한|정지|박탈|취소)|입찰\s?참가\s?자격|말소|정지|취소|불인정|부적격|계약\s?해제|계약\s?해지|등록\s?말소)/i },
       toxic: { label: '독소조항 일반', weight: 2, regex: /(준수하여야\s?한다|따르지\s?않는\s?경우|임의로\s?변경할\s?수\s?없다|양식에\s?맞지\s?않는\s?경우|지정\s?양식|정해진\s?서식|초과분은\s?평가하지\s?않음|인정하지\s?않음)/i },
+      qualification: { label: '실적/자격 과다제한', weight: 3, regex: /(동일한?\s?종류의?\s?실적|유사\s?실적|실적[^\n]{0,6}(?:기준|보유|\d+\s?건)|최근\s?\d+\s?년간?[^\n]{0,10}실적|시공\s?실적|용역\s?실적|신용평가등급|회사채\s?등급|경영상태\s?평가|지역\s?제한|관내\s?업체|본점\s?소재지|지역\s?의무공동도급|중복\s?참여\s?제한|입찰\s?참가\s?자격\s?사전심사|특정\s?자격증?\s?보유|보유\s?장비|기술인\s?보유\s?기준)/i },
+      liability: { label: '과다 배상·하자책임', weight: 3, regex: /(손해배상액?의?\s?예정|하자보수보증금|하자담보책임|계약보증금\s?귀속|지체상금|일방적\s?계약\s?해지|귀책사유[^\n]{0,4}불문|무제한\s?배상|손해[^\n]{0,4}전부[^\n]{0,4}배상|손해배상[^\n]{0,6}책임을?\s?진다)/i },
+      ip: { label: '지식재산권 부당이관', weight: 3, regex: /(지식재산권[^\n]{0,8}발주자[^\n]{0,6}귀속|저작권[^\n]{0,6}일체를?\s?양도|성과물[^\n]{0,10}권리는?[^\n]{0,6}발주자|2차적\s?저작물\s?작성권|저작권을?\s?포기)/i },
       standard: { label: '기준서 대비 추가', weight: 0, regex: /$^/ },
       safe: { label: '제한 없음/완화', weight: -3, regex: /(제한\s?없음|제한을\s?두지\s?않|크기\s?제한\s?없음|글씨\s?크기는\s?제한\s?없음|적용하지\s?않는다|자율적으로\s?작성)/i }
     };
+    const FORMAT_KEYS = ['font','spacing','margin','page','decoration','toxic'];
+    const UNFAIR_KEYS = ['qualification','liability','ip'];
+    const ALL_SCAN_KEYS = [...FORMAT_KEYS, 'penalty', ...UNFAIR_KEYS];
 
     let customKeywords = loadJson(LS_KEYS.customKeywords, []);
     let learnedClauses = loadJson(LS_KEYS.learnedClauses, []);
@@ -555,6 +721,10 @@
     let standardLibraries = loadJson(LS_KEYS.standardLibraries, {});
     let caseSharesList = loadJson(LS_KEYS.caseShares, []);
     let recentAnalysisLogs = [];
+    let statsAnalysisLogs = loadJson(LS_KEYS.localAnalysisLogs, []); // 대시보드 집계용 (비공유 모드 대비)
+    let falsePositiveReports = []; // Firestore 실시간 구독
+    let globalWhitelist = loadJson(LS_KEYS.globalWhitelistLocal, {}); // { hash: {normText, rawText, ...} }
+    let globalWhitelistHashSet = new Set(Object.keys(globalWhitelist));
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -564,7 +734,7 @@
     function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
     function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
     function getCustomRegex(keyword) { return new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); }
     function tokenize(text) {
@@ -584,10 +754,27 @@
       const bulletPattern = /^\s*(?:\((?:[0-9]{1,3}|[가-하]|[A-Za-z]|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+)\)|(?:[0-9]{1,3}|[가-하]|[A-Za-z]|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+)[.\)](?!\d)|[-*○●□■※ㅇ])\s*/;
       return line.replace(bulletPattern, '').trim();
     }
+    // 간단한 문자열 해시(FNV 계열 변형). Firestore 문서 ID로 안전하게 쓰기 위해
+    // 정규화된 문구 텍스트를 짧은 영숫자 키로 변환합니다.
+    function hashText(str) {
+      let h = 0;
+      const s = String(str || '');
+      for (let i = 0; i < s.length; i++) {
+        h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+      }
+      return 'h' + Math.abs(h).toString(36);
+    }
+    function getReporterId() {
+      let id = localStorage.getItem(LS_KEYS.reporterId);
+      if (!id) {
+        id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('r' + Date.now() + Math.random().toString(36).slice(2));
+        localStorage.setItem(LS_KEYS.reporterId, id);
+      }
+      return id;
+    }
 
     // 한 번 인증하면(잠금 해제) 이후에는 이 화면을 새로고침하기 전까지
-    // 관리자 비밀번호를 다시 묻지 않습니다. 매번 각 기능(키워드 추가/삭제,
-    // 기준서 업로드 등)마다 비밀번호를 입력해야 했던 번거로움을 없앴습니다.
+    // 관리자 비밀번호를 다시 묻지 않습니다.
     async function requireAdmin(actionName) {
       if (adminUnlocked) return true;
       const pw = prompt(`관리자 전용 기능입니다.
@@ -595,7 +782,6 @@
       if (pw === null) return false;
 
       if (!FIREBASE_READY) {
-        // Firebase 미설정 상태에서는 예전처럼 로컬 고정 비밀번호로 동작합니다.
         if (pw !== ADMIN_PASSWORD) {
           alert('비밀번호가 올바르지 않습니다.');
           return false;
@@ -622,6 +808,7 @@
         btn.textContent = adminUnlocked ? '🔓 관리자 인증됨' : '🔒 관리자 인증';
         btn.title = adminUnlocked ? '클릭하면 다시 잠글 수 있습니다.' : '한 번 인증하면 새로고침 전까지 비밀번호를 다시 묻지 않습니다.';
       });
+      renderGlobalWhitelistCandidates();
     }
 
     window.toggleAdminUnlock = async function(event) {
@@ -664,7 +851,6 @@
     function updateMemoStats() {
       const date = getDateParts();
       if (!FIREBASE_READY) {
-        // Firebase 미설정 시 예전처럼 이 브라우저에만 저장되는 카운트를 사용합니다.
         if (analyzeStats.dateKey !== date.key) {
           analyzeStats.dateKey = date.key;
           analyzeStats.todayCount = 0;
@@ -682,6 +868,13 @@
         analyzeStats.totalCount += 1;
         saveJson(LS_KEYS.analyzeStats, analyzeStats);
         updateMemoStats();
+        // 공유 DB가 없을 때도 대시보드가 동작하도록 로컬에 최근 기록을 남깁니다.
+        statsAnalysisLogs.unshift({ timestamp: Date.now(), ...meta });
+        statsAnalysisLogs = statsAnalysisLogs.slice(0, 300);
+        saveJson(LS_KEYS.localAnalysisLogs, statsAnalysisLogs);
+        recentAnalysisLogs = statsAnalysisLogs.slice(0, 20);
+        renderAnalysisLogs();
+        renderDashboard();
         return;
       }
       try {
@@ -701,7 +894,8 @@
             timestamp: Date.now(),
             municipality: meta.municipality || '',
             hitCount: meta.hitCount || 0,
-            riskLabel: meta.riskLabel || ''
+            riskLabel: meta.riskLabel || '',
+            categoryCounts: meta.categoryCounts || {}
           });
         }
       } catch (e) {
@@ -823,7 +1017,13 @@
         </div>
       `).join('');
     }
-    
+
+    // 학습 문구는 공유 DB 모드에서 {id, clause, ...} 객체로, 비공유 모드에서는
+    // 일반 문자열로 저장됩니다. 어느 쪽이든 실제 문구 텍스트만 뽑아냅니다.
+    function learnedClauseText(item) {
+      return typeof item === 'string' ? item : (item && item.clause) || '';
+    }
+
     function parseLearnedClauses(rawText) {
       const lines = rawText.split(/\r?\n/).map(normalizeClauseLine).filter(line => line.length >= 8 && !/^\[.*\]$/.test(line));
       return [...new Set(lines)];
@@ -840,10 +1040,6 @@
     }
 
     function parseStandardClauses(rawText) {
-      // 길이 필터(6자 이상)는 글머리표를 떼어내기 "전"의 원문 기준으로 판단합니다.
-      // 떼어낸 뒤 문자열로 필터링하면, "1) 사업명 :"처럼 원문은 충분히 길어도
-      // 글머리표를 떼고 나면 6자 미만이 되어 기준서 목록에서 통째로 빠져버리고,
-      // 이후 동일 문장이 나와도 "추가 문구"로 오탐지되는 원인이 됩니다.
       return [...new Set(
         rawText.split(/\r?\n/)
           .map(line => line.replace(/[^\S\r\n]+/g, ' ').trim())
@@ -854,16 +1050,10 @@
       )];
     }
 
-
     function clauseSimilarity(a, b) {
       const na = normalizeCompareText(a);
       const nb = normalizeCompareText(b);
       if (!na || !nb) return 0;
-      // 완전 일치/포함 여부는 띄어쓰기를 아예 무시하고 비교합니다. PDF/HWPX는
-      // 줄바꿈 위치에 따라 같은 문장이라도 공백이 달리 들어가는 경우가 많아서
-      // (예: "하도급을 받은" vs "하도급을받은"), 공백 한 칸 차이 때문에 같은
-      // 문구를 "추가 문구"로 오탐지하는 걸 막기 위함입니다. 토큰 기반 유사도는
-      // 단어 경계가 필요하므로 공백을 유지한 na/nb를 그대로 사용합니다.
       const naNoSpace = na.replace(/\s+/g, '');
       const nbNoSpace = nb.replace(/\s+/g, '');
       if (naNoSpace === nbNoSpace) return 1;
@@ -873,6 +1063,136 @@
       const prefixBonus = shorter >= 8 && (na.slice(0, 12) === nb.slice(0, 12)) ? 0.08 : 0;
       return Math.min(1, tokenSim + prefixBonus);
     }
+
+    // ── 글로벌 오탐지 화이트리스트 ──────────────────────────────
+    function isGloballyWhitelisted(text) {
+      const norm = normalizeCompareText(text);
+      if (!norm) return false;
+      const hash = hashText(norm);
+      if (globalWhitelistHashSet.has(hash)) return true;
+      // 정확 일치 외에 공백 무시 포함관계까지 넓게 잡아, 표현이 살짝 다른 변형도 함께 걸러줍니다.
+      const noSpace = norm.replace(/\s+/g, '');
+      for (const entry of Object.values(globalWhitelist)) {
+        const entryNoSpace = (entry.normText || '').replace(/\s+/g, '');
+        if (entryNoSpace && (entryNoSpace === noSpace)) return true;
+      }
+      return false;
+    }
+
+    function computeFalsePositiveCandidates() {
+      const groups = new Map(); // hash -> { hash, normText, rawText, reporters:Set }
+      falsePositiveReports.forEach(r => {
+        if (!r.hash || !r.normText) return;
+        if (!groups.has(r.hash)) groups.set(r.hash, { hash: r.hash, normText: r.normText, rawText: r.rawText || r.normText, reporters: new Set() });
+        groups.get(r.hash).reporters.add(r.reporterId || 'unknown');
+      });
+      return [...groups.values()]
+        .filter(g => !globalWhitelistHashSet.has(g.hash))
+        .map(g => ({ ...g, reportCount: g.reporters.size }))
+        .filter(g => g.reportCount >= GLOBAL_WHITELIST_THRESHOLD)
+        .sort((a, b) => b.reportCount - a.reportCount);
+    }
+
+    function renderGlobalWhitelistCandidates() {
+      const candidates = computeFalsePositiveCandidates();
+      if (el('candidateCount')) el('candidateCount').textContent = candidates.length;
+      if (el('whitelistCount')) el('whitelistCount').textContent = Object.keys(globalWhitelist).length;
+
+      const listEl = el('candidateList');
+      if (listEl) {
+        if (!candidates.length) {
+          listEl.innerHTML = `<div class="empty">아직 ${GLOBAL_WHITELIST_THRESHOLD}명 이상이 신고한 오탐지 후보가 없습니다.</div>`;
+        } else {
+          listEl.innerHTML = candidates.map(c => `
+            <div class="item">
+              <div class="item-top">
+                <div class="badges">
+                  <span class="badge yellow">신고자 ${c.reportCount}명</span>
+                </div>
+                <div class="row" style="flex:0 0 auto; gap:6px;">
+                  <button class="ok-btn" style="padding:4px 8px; font-size:11px;" onclick="approveGlobalWhitelist('${c.hash}')">화이트리스트 승인</button>
+                  <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="dismissGlobalCandidate('${c.hash}')">신고 초기화</button>
+                </div>
+              </div>
+              <div class="excerpt">${escapeHtml(c.rawText)}</div>
+            </div>
+          `).join('');
+        }
+      }
+
+      const wlEl = el('whitelistList');
+      if (wlEl) {
+        const entries = Object.entries(globalWhitelist);
+        if (!entries.length) {
+          wlEl.innerHTML = '';
+        } else {
+          wlEl.innerHTML = entries.map(([hash, item]) => `
+            <div class="item">
+              <div class="item-top">
+                <div class="badges">
+                  <span class="badge green">전사 화이트리스트</span>
+                  <span class="badge blue">신고 ${item.reportCount || 0}명</span>
+                </div>
+                <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeGlobalWhitelist('${hash}')">해제</button>
+              </div>
+              <div class="excerpt">${escapeHtml(item.rawText || item.normText)}</div>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    window.approveGlobalWhitelist = async function(hash) {
+      if (!(await requireAdmin('글로벌 화이트리스트 승인'))) return;
+      const candidate = computeFalsePositiveCandidates().find(c => c.hash === hash);
+      if (!candidate) return alert('후보를 찾을 수 없습니다.');
+      const payload = {
+        normText: candidate.normText,
+        rawText: candidate.rawText,
+        reportCount: candidate.reportCount,
+        approvedAt: Date.now(),
+        approvedBy: ADMIN_EMAIL
+      };
+      if (FIREBASE_READY) {
+        try {
+          await db.collection('globalWhitelist').doc(hash).set(payload);
+          alert('전사 화이트리스트에 등록했습니다. 앞으로 모든 직원의 분석에서 자동 제외됩니다.');
+        } catch (e) { console.error(e); alert('등록 중 오류가 발생했습니다.'); }
+      } else {
+        globalWhitelist[hash] = payload;
+        globalWhitelistHashSet.add(hash);
+        saveJson(LS_KEYS.globalWhitelistLocal, globalWhitelist);
+        renderGlobalWhitelistCandidates();
+      }
+    };
+
+    window.dismissGlobalCandidate = async function(hash) {
+      if (!(await requireAdmin('오탐지 신고 초기화'))) return;
+      if (!confirm('이 문구에 대한 신고 기록을 모두 삭제할까요? (직원이 다시 신고하면 카운트가 새로 쌓입니다)')) return;
+      if (FIREBASE_READY) {
+        try {
+          const snap = await db.collection('falsePositiveReports').where('hash', '==', hash).get();
+          const batch = db.batch();
+          snap.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        } catch (e) { console.error(e); alert('초기화 중 오류가 발생했습니다.'); }
+      } else {
+        renderGlobalWhitelistCandidates();
+      }
+    };
+
+    window.removeGlobalWhitelist = async function(hash) {
+      if (!(await requireAdmin('전사 화이트리스트 해제'))) return;
+      if (!confirm('전사 화이트리스트에서 해제할까요? 다음 분석부터 다시 탐지될 수 있습니다.')) return;
+      if (FIREBASE_READY) {
+        await db.collection('globalWhitelist').doc(hash).delete();
+      } else {
+        delete globalWhitelist[hash];
+        globalWhitelistHashSet.delete(hash);
+        saveJson(LS_KEYS.globalWhitelistLocal, globalWhitelist);
+        renderGlobalWhitelistCandidates();
+      }
+    };
 
     function getSortedMunicipalities() {
       return Object.keys(standardLibraries).sort((a, b) => a.localeCompare(b, 'ko'));
@@ -949,12 +1269,6 @@
         return { enabled: false, municipality: '', additionalClauses: [], additionalMap: new Map() };
       }
 
-      // 중요: selected.clauses(예전에 저장된 값)를 그대로 쓰지 않고,
-      // 저장된 원문(rawText)으로부터 "지금 버전의" parseStandardClauses로
-      // 매번 다시 계산합니다. 예전 버전 파서의 버그로 저장된 clauses가
-      // localStorage에 그대로 남아있으면, 코드를 고쳐도 재분석 시 여전히
-      // 옛날에 잘못 잘려나간 기준 문구 목록을 참조하게 되어 같은 오탐지가
-      // 재현되기 때문입니다. rawText만 있으면 항상 최신 로직으로 재파싱합니다.
       const standardClauses = (typeof selected.rawText === 'string' && selected.rawText.length)
         ? parseStandardClauses(selected.rawText)
         : (Array.isArray(selected.clauses) ? selected.clauses : []);
@@ -972,7 +1286,6 @@
         if (/^(목\s*차|일반사항|평가기준|제출서류|첨부파일|참고자료|붙임|별첨)\s*$/i.test(text)) return;
         if (/^[0-9ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ가-하A-Z\(\)\.\-\s]+$/.test(text) && text.length < 16) return;
 
-
         let bestClause = '';
         let bestSimilarity = 0;
         for (const clause of standardClauses) {
@@ -985,12 +1298,7 @@
         }
 
         if (bestSimilarity < 0.58) {
-          const info = {
-            lineNo: line.lineNo,
-            text,
-            similarity: bestSimilarity,
-            bestClause
-          };
+          const info = { lineNo: line.lineNo, text, similarity: bestSimilarity, bestClause };
           additionalClauses.push(info);
           additionalMap.set(line.lineNo, info);
         }
@@ -1007,13 +1315,14 @@
       let score = 0;
       let isNlpMatched = false;
 
+      // 조건-제재 결합 패턴: "~한 경우/~시/~라면 ... 감점/실격/제외" 형태를 광범위하게 잡습니다.
       const nlpPattern = /(경우|시|에는|라면|초과|미준수|위반|제출하지\s?않|미제출|미이행|불이행)[\s\S]*(감점|제외|불가|0점|실격|제재|평가하지\s?않|탈락|박탈|말소|정지|취소|부적격|불인정)/i;
       if (nlpPattern.test(text)) {
         isNlpMatched = true;
         score += 5;
       }
 
-      ['font','spacing','margin','page','decoration','penalty','toxic'].forEach((key) => {
+      ALL_SCAN_KEYS.forEach((key) => {
         if (categories[key].regex.test(text)) matched.push(key);
       });
 
@@ -1024,7 +1333,9 @@
         }
       });
 
-      learnedClauses.forEach(clause => {
+      learnedClauses.forEach(item => {
+        const clause = learnedClauseText(item);
+        if (!clause) return;
         if (text.includes(clause) || clause.includes(text)) {
           learnMatched.push({ clause, similarity: 1 });
         } else {
@@ -1038,21 +1349,26 @@
         score += learnMatched[0].similarity >= 0.9 ? 4 : learnMatched[0].similarity >= 0.6 ? 3 : 2;
       }
 
-      const hasFormat = matched.some(k => ['font','spacing','margin','page','decoration','toxic'].includes(k));
+      const hasFormat = matched.some(k => FORMAT_KEYS.includes(k));
       const hasPenalty = matched.includes('penalty') || customMatched.some(m => m.category === 'penalty');
+      const hasUnfair = matched.some(k => UNFAIR_KEYS.includes(k)) || customMatched.some(m => UNFAIR_KEYS.includes(m.category));
 
       matched.forEach(k => { score += categories[k]?.weight || 0; });
 
       const nearbyPenalty = categories.penalty.regex.test(prev) || categories.penalty.regex.test(next);
-      const nearbyFormat = ['font','spacing','margin','page','decoration','toxic'].some(k => categories[k].regex.test(prev) || categories[k].regex.test(next));
+      const nearbyFormat = FORMAT_KEYS.some(k => categories[k].regex.test(prev) || categories[k].regex.test(next));
+      const nearbyUnfair = UNFAIR_KEYS.some(k => categories[k].regex.test(prev) || categories[k].regex.test(next));
 
       if (hasFormat && hasPenalty) score += 3;
       if (hasFormat && nearbyPenalty) score += 2;
       if (hasPenalty && nearbyFormat) score += 2;
+      if (hasUnfair && hasPenalty) score += 3;
+      if (hasUnfair && nearbyPenalty) score += 2;
       if (safe) score -= 3;
 
       const allMatched = [...new Set([...matched, ...customMatched.map(m => m.category)])];
-      const isToxicBySignals = score >= 5 || isNlpMatched || (hasFormat && hasPenalty) || customMatched.some(m => ['penalty','toxic'].includes(m.category)) || learnMatched.length > 0;
+      const isToxicBySignals = score >= 5 || isNlpMatched || (hasFormat && hasPenalty) || hasUnfair
+        || customMatched.some(m => ['penalty','toxic', ...UNFAIR_KEYS].includes(m.category)) || learnMatched.length > 0;
 
       return {
         score,
@@ -1061,19 +1377,19 @@
         learnMatched: learnMatched.slice(0, 2),
         hasFormat,
         hasPenalty,
+        hasUnfair,
         isNlpMatched,
         safe,
         nearbyPenalty,
         nearbyFormat,
+        nearbyUnfair,
         isToxicBySignals
       };
     }
 
     window.switchTab = function(tab) {
-
       el('customKeywords').style.display = tab === 'custom' ? 'flex' : 'none';
       el('learnedKeywords').style.display = tab === 'learned' ? 'flex' : 'none';
-      
       el('tabCustom').classList.toggle('active', tab === 'custom');
       el('tabLearned').classList.toggle('active', tab === 'learned');
     };
@@ -1103,15 +1419,19 @@
 
       if (!learnedClauses.length) el('learnedKeywords').innerHTML = '<div class="empty">학습된 문구가 없습니다.</div>';
       else {
-        el('learnedKeywords').innerHTML = learnedClauses.map((item, idx) => `
+        el('learnedKeywords').innerHTML = learnedClauses.map((item, idx) => {
+          const text = typeof item === 'string' ? item : item.clause;
+          const removeArg = FIREBASE_READY && typeof item === 'object' && item.id ? `'${item.id}'` : idx;
+          return `
           <div class="item">
             <div class="item-top">
               <span class="badge green">학습 문구</span>
-              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeLearnedKeyword(${idx})">삭제</button>
+              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="removeLearnedKeyword(${removeArg})">삭제</button>
             </div>
-            <div class="excerpt">${escapeHtml(item)}</div>
+            <div class="excerpt">${escapeHtml(text)}</div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
     }
 
@@ -1125,40 +1445,57 @@
         renderCustomKeywords();
       }
     };
-    window.removeLearnedKeyword = async function(idx) {
-      // 학습 문구는 이 브라우저에만 저장되는 개인 작업용 데이터입니다 (공유 DB 대상 아님).
+    window.removeLearnedKeyword = async function(idOrIdx) {
       if (!(await requireAdmin('삭제'))) return;
-      learnedClauses.splice(idx, 1);
-      saveJson(LS_KEYS.learnedClauses, learnedClauses);
-      renderCustomKeywords();
+      if (FIREBASE_READY && typeof idOrIdx === 'string') {
+        try { await db.collection('learnedClauses').doc(idOrIdx).delete(); }
+        catch (e) { console.error(e); alert('삭제 중 오류가 발생했습니다.'); }
+      } else {
+        learnedClauses.splice(idOrIdx, 1);
+        saveJson(LS_KEYS.learnedClauses, learnedClauses);
+        renderCustomKeywords();
+      }
     };
 
     function buildDynamicMatchers() {
       return customKeywords.map(item => ({ label: item.keyword, category: item.category, weight: Number(item.weight) || 2, regex: getCustomRegex(item.keyword) }));
     }
 
-    window.markFalsePositive = function(idx) {
+    // 오탐지 제외: 이 브라우저에서는 즉시 제외 처리하고, 공유 DB가 연결되어 있으면
+    // "다른 사람이 신고한 횟수"를 세기 위한 신고 기록을 함께 남깁니다. 같은 사람이
+    // 같은 문구를 여러 번 눌러도 문서ID가 (문구해시_신고자ID)로 고정되어 1명으로만 집계됩니다.
+    window.markFalsePositive = async function(idx) {
       const f = window.__lastResult.findings[idx];
-      if(!confirm(`이 문구를 오탐지로 등록하여 다음 검사부터 제외하시겠습니까?\n\n"${f.text}"`)) return;
-      
-      if(!falsePositives.includes(f.text)) {
+      if (!confirm(`이 문구를 오탐지로 등록하여 다음 검사부터 제외하시겠습니까?\n\n"${f.text}"\n\n(공유 DB 연결 시, 서로 다른 5명 이상이 같은 문구를 신고하면 관리자 승인을 거쳐 전 직원에게 자동 적용됩니다.)`)) return;
+
+      if (!falsePositives.includes(f.text)) {
         falsePositives.push(f.text);
         saveJson(LS_KEYS.falsePositives, falsePositives);
+      }
+
+      if (FIREBASE_READY) {
+        try {
+          const normText = normalizeCompareText(f.text);
+          const hash = hashText(normText);
+          const reporterId = getReporterId();
+          await db.collection('falsePositiveReports').doc(`${hash}_${reporterId}`).set({
+            hash, normText, rawText: f.text, reporterId, createdAt: Date.now()
+          }, { merge: true });
+        } catch (e) { console.error('오탐지 신고 저장 실패:', e); }
       }
       doAnalyze();
     };
 
     // 표준 기준서에 없는 "추가 문구"는 그 자체로 이미 의심 대상이므로, 일반 독소조항
-    // 판정(inspectRiskSignals)보다 넓게 잡아야 놓치는 경우가 줄어듭니다. 아래 사전은
-    // 자격 박탈/실격/불이익류 표현을 포괄적으로 담아, "제출하지 않을시 입찰자격을
-    // 박탈한다"처럼 일반 사전엔 없는 표현(박탈 등)도 추가 문구 판정에서는 잡아냅니다.
-    const additionalClauseToxicRegex = /(박탈|실격|무효|자격[^\n]{0,4}(?:상실|제한|정지|박탈|취소)|입찰\s?참가\s?자격|부적격|불인정|불이익|감점|감액|제외|배제|반려|탈락|말소|취소|정지(?!\s?없)|해제|해지|미준수|위반\s?시|미제출|미이행|불이행|제출하지\s?않)/;
+    // 판정(inspectRiskSignals)보다 넓게 잡아야 놓치는 경우가 줄어듭니다.
+    const additionalClauseToxicRegex = /(박탈|실격|무효|자격[^\n]{0,4}(?:상실|제한|정지|박탈|취소)|입찰\s?참가\s?자격|부적격|불인정|불이익|감점|감액|제외|배제|반려|탈락|말소|취소|정지(?!\s?없)|해제|해지|미준수|위반\s?시|미제출|미이행|불이행|제출하지\s?않|실적\s?기준|신용평가등급|손해배상액?의?\s?예정|지식재산권)/;
 
     function analyzeText(text) {
       const lines = text.split(/\r?\n/).map((line, idx) => ({ lineNo: idx + 1, text: line.trim() })).filter(x => x.text.length > 0);
       const findings = [];
-      let formatCount = 0, penaltyCount = 0, learnMatchCount = 0, customMatchCount = 0;
+      let formatCount = 0, penaltyCount = 0, unfairCount = 0, learnMatchCount = 0, customMatchCount = 0;
       let standardAddedCount = 0, standardAddedToxicCount = 0;
+      const categoryTally = {};
       const customMatchers = buildDynamicMatchers();
       const excludePatterns = /^(목\s*차|진행순서|배점기준|평가기준|일반사항|제출서류|오시는\s*길|참고자료|첨부파일)\s*$/i;
       const standardComparison = compareAgainstStandard(lines);
@@ -1167,6 +1504,7 @@
       lines.forEach((line, idx) => {
         const text = line.text;
         if (falsePositives.includes(text)) return;
+        if (isGloballyWhitelisted(text)) return;
         if (text.length < 20 && excludePatterns.test(text)) return;
 
         const prev = lines[idx - 1]?.text || '';
@@ -1180,6 +1518,9 @@
         if (signal.learnMatched.length) learnMatchCount += 1;
         if (signal.hasFormat) formatCount += 1;
         if (signal.hasPenalty) penaltyCount += 1;
+        if (signal.hasUnfair) unfairCount += 1;
+
+        matched.forEach(k => { if (k !== 'standard') categoryTally[k] = (categoryTally[k] || 0) + 1; });
 
         const extraClause = standardComparison.additionalMap.get(line.lineNo);
         if (extraClause) {
@@ -1187,7 +1528,7 @@
           reason.push(`표준 기준서(${standardComparison.municipality}) 대비 추가 문구`);
           const additionalToxic = signal.isToxicBySignals || additionalClauseToxicRegex.test(text);
           if (additionalToxic) {
-            if (!signal.isToxicBySignals) score = Math.max(score, 5); // 추가문구 전용 판정으로 잡힌 경우 최소 점수 보장
+            if (!signal.isToxicBySignals) score = Math.max(score, 5);
             score += 10;
             standardAddedToxicCount += 1;
             reason.push('추가 문구가 독소조항 신호와 결합되어 가중치 10 적용');
@@ -1199,7 +1540,8 @@
         if (signal.isNlpMatched) reason.push('🧠 구문분석: 조건-제재 결합 패턴 감지');
         if (signal.hasFormat) reason.push('형식 제한 문구 포함');
         if (signal.hasPenalty) reason.push('감점/실격 가능 문구 포함');
-        if ((signal.hasFormat && signal.nearbyPenalty) || (signal.hasPenalty && signal.nearbyFormat)) reason.push('인접 줄과 결합 시 독소조항 가능성');
+        if (signal.hasUnfair) reason.push('실적/자격 과다제한·과다 배상책임·지식재산권 부당이관 등 불공정 문구 포함');
+        if ((signal.hasFormat && signal.nearbyPenalty) || (signal.hasPenalty && signal.nearbyFormat) || (signal.hasUnfair && signal.nearbyPenalty)) reason.push('인접 줄과 결합 시 독소조항 가능성');
         if (signal.customMatched.length) reason.push(`사용자 키워드 ${signal.customMatched.length}건 일치`);
         if (signal.learnMatched.length) reason.push(`학습 문구 유사도 ${(signal.learnMatched[0].similarity * 100).toFixed(0)}%`);
         if (signal.safe) reason.push('제한 없음/완화 표현이 있어 위험도 조정');
@@ -1222,7 +1564,8 @@
               standardAdded: Boolean(extraClause),
               standardMunicipality: standardComparison.municipality || '',
               standardSimilarity: extraClause?.similarity ?? null,
-              standardBestClause: extraClause?.bestClause || ''
+              standardBestClause: extraClause?.bestClause || '',
+              aiReview: null
             });
           }
         }
@@ -1243,10 +1586,12 @@
         findings,
         formatCount,
         penaltyCount,
+        unfairCount,
         learnMatchCount,
         customMatchCount,
         standardAddedCount,
         standardAddedToxicCount,
+        categoryTally,
         standardComparisonEnabled: standardComparison.enabled,
         standardMunicipality: standardComparison.municipality,
         additionalClauses: standardComparison.additionalClauses || [],
@@ -1257,7 +1602,6 @@
     }
 
     function buildChecklist(findings, standardComparison) {
-
       const set = new Set();
       findings.forEach(f => {
         if (f.matched.includes('font')) set.add('글자크기·글꼴·포인트를 실제 제출본 템플릿과 대조');
@@ -1266,6 +1610,9 @@
         if (f.matched.includes('page')) set.add('A4/A3, 페이지 수, 표지·간지 포함 여부 및 초과분 처리 방식 확인');
         if (f.matched.includes('decoration')) set.add('색상·음영·테두리·굵게·밑줄·워드아트 등 치장 요소 제거 검토');
         if (f.matched.includes('penalty')) set.add('위반 시 감점/실격/평가 제외 문구를 입찰팀 체크리스트에 별도 등록');
+        if (f.matched.includes('qualification')) set.add('실적·자격·신용등급·지역 제한 기준이 과도하지 않은지 유관부서와 협의');
+        if (f.matched.includes('liability')) set.add('손해배상 예정액·하자보수보증금·지체상금 조항의 형평성 검토');
+        if (f.matched.includes('ip')) set.add('지식재산권/저작권 귀속 조항이 일방적으로 발주자에게만 유리한지 확인');
       });
       if (!set.size) set.add('탐지된 독소조항은 없지만 공고문 본문·붙임·정정공고·질의회신을 함께 재확인');
       return Array.from(set);
@@ -1278,33 +1625,35 @@
       el('hitCount').textContent = result.findings.length;
       el('formatCount').textContent = result.formatCount;
       el('penaltyCount').textContent = result.penaltyCount;
+      el('unfairCount').textContent = result.unfairCount || 0;
       el('learnMatchCount').textContent = result.learnMatchCount;
       el('customMatchCount').textContent = result.customMatchCount;
-      el('standardAddedCount').textContent = result.standardAddedCount || 0;
       el('standardAddedToxicCount').textContent = result.standardAddedToxicCount || 0;
 
       el('summaryBox').className = 'item';
       const compareText = result.standardComparisonEnabled
         ? `선택 지자체 <b>${escapeHtml(result.standardMunicipality)}</b> 기준서와 함께 대조했습니다. 추가 문구 ${result.standardAddedCount}건 중 독소조항 판독 ${result.standardAddedToxicCount}건입니다.`
         : '표준 기준서 대조는 실행되지 않았습니다. 지자체를 선택하면 일반 탐지와 함께 추가 문구 비교가 동작합니다.';
-      el('summaryBox').innerHTML = `<div class="excerpt">종합 위험도는 <b>${result.overallRisk}</b>입니다. 의심 조항은 <b>점수 높은 순</b>으로 정렬되어 표시됩니다. 형식 제한 ${result.formatCount}건, 감점·실격 ${result.penaltyCount}건, 학습 일치 ${result.learnMatchCount}건, 사용자 키워드 일치 ${result.customMatchCount}건을 탐지했습니다. ${compareText}</div>`;
+      el('summaryBox').innerHTML = `<div class="excerpt">종합 위험도는 <b>${result.overallRisk}</b>입니다. 의심 조항은 <b>점수 높은 순</b>으로 정렬되어 표시됩니다. 형식 제한 ${result.formatCount}건, 감점·실격 ${result.penaltyCount}건, 실적·자격 등 과다제한 ${result.unfairCount || 0}건, 학습 일치 ${result.learnMatchCount}건, 사용자 키워드 일치 ${result.customMatchCount}건을 탐지했습니다. ${compareText}</div>`;
 
-      // ── 의심 조항 목록 (standard 항목은 제외하고 순수 독소조항만 표시) ──
       const pureFindings = result.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard'));
       if (!pureFindings.length) el('findings').innerHTML = '<div class="empty">뚜렷한 의심 조항을 찾지 못했습니다.</div>';
       else {
-        el('findings').innerHTML = pureFindings.map((f, idx) => {
+        el('findings').innerHTML = pureFindings.map((f) => {
           const sev = f.severity === 'high' ? ['red','높음'] : f.severity === 'mid' ? ['yellow','보통'] : ['green','낮음'];
           const badgeHtml = f.matched
             .filter(k => k !== 'standard')
             .map(k => {
-              const color = k === 'penalty' ? 'red' : k === 'toxic' ? 'purple' : 'blue';
+              const color = k === 'penalty' ? 'red' : (k === 'toxic' || UNFAIR_KEYS.includes(k)) ? 'purple' : 'blue';
               return `<span class="badge ${color}">${escapeHtml(categories[k]?.label || k)}</span>`;
             }).join('');
           const learnHtml = (f.learnMatched || []).map(m => `<div class="why">학습 일치: ${escapeHtml(m.clause)} (${(m.similarity * 100).toFixed(0)}%)</div>`).join('');
           const globalIdx = result.findings.indexOf(f);
+          const aiHtml = f.aiReview
+            ? `<div class="ai-result"><span class="badge ${f.aiReview.verdict === '독소조항' ? 'red' : 'yellow'}">🤖 AI 확인: ${escapeHtml(f.aiReview.verdict || '-')}</span> <span style="margin-left:6px;">${escapeHtml(f.aiReview.reason || '')}</span></div>`
+            : '';
           return `
-            <div class="item clickable" data-line="${f.lineNo}" data-text="${escapeHtml(f.text)}">
+            <div class="item clickable" data-line="${f.lineNo}" data-text="${escapeHtml(f.text)}" data-idx="${globalIdx}">
               <div class="item-top">
                 <div class="badges">
                   <span class="badge ${sev[0]}">위험도 ${sev[1]}</span>
@@ -1312,11 +1661,12 @@
                   <span class="badge blue">줄 ${f.lineNo}</span>
                   ${badgeHtml}
                 </div>
-                <button class="secondary small" style="padding:4px 8px; font-size:11px;" onclick="event.stopPropagation(); window.markFalsePositive(${globalIdx})">오탐지 제외</button>
+                <button class="secondary" style="padding:4px 8px; font-size:11px;" onclick="event.stopPropagation(); window.markFalsePositive(${globalIdx})">오탐지 제외</button>
               </div>
               <div class="excerpt">${escapeHtml(f.text)}</div>
               <div class="why">${escapeHtml(f.reason)}</div>
               ${learnHtml}
+              ${aiHtml}
             </div>
           `;
         }).join('');
@@ -1326,7 +1676,6 @@
         });
       }
 
-      // ── 추가문구 목록 (기준서 대비 추가된 문구만 별도 표시) ──
       const addClauses = result.additionalClauses || [];
       const muni = result.standardMunicipality || '';
       if (!result.standardComparisonEnabled) {
@@ -1337,7 +1686,6 @@
         el('additionalFindings').innerHTML = '<div class="empty">기준서 대비 추가된 문구가 없습니다. 기준서와 잘 일치합니다.</div>';
       } else {
         el('additionalHint').textContent = `${muni} 기준 대비 ${addClauses.length}건`;
-        // 추가문구 중 독소조항 신호가 있는 것 먼저 정렬
         const sorted = [...addClauses].sort((a, b) => {
           const aT = result.findings.some(f => f.lineNo === a.lineNo && f.standardAdded && f.score > 5);
           const bT = result.findings.some(f => f.lineNo === b.lineNo && f.standardAdded && f.score > 5);
@@ -1373,62 +1721,369 @@
     }
 
     function jumpToText(targetText) {
-
       const textarea = el('sourceText');
       const plain = textarea.value;
       const text = targetText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
       const start = plain.indexOf(text);
       if (start === -1) return;
       const end = start + text.length;
-      
+
       textarea.focus();
       textarea.setSelectionRange(start, end);
 
       const before = plain.slice(0, start);
       const lineCount = (before.match(/\n/g) || []).length;
       const totalLines = (plain.match(/\n/g) || []).length || 1;
-      
+
       const scrollRatio = lineCount / totalLines;
       const targetScroll = scrollRatio * textarea.scrollHeight;
-      
+
       textarea.scrollTop = Math.max(0, targetScroll - (textarea.clientHeight / 2));
     }
 
-    function doAnalyze() {
+    async function doAnalyze() {
       const text = el('sourceText').value.trim();
       if (!text) return alert('분석할 문서를 먼저 입력해 주세요.');
-      const result = analyzeText(text);
-      incrementAnalyzeStats({
-        municipality: el('municipalitySelect').value || '',
-        hitCount: result.findings.length,
-        riskLabel: result.overallRisk
-      });
-      render(result);
+      const btn = el('analyzeBtn');
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '분석 중…';
+      try {
+        let result = analyzeText(text);
+        result = await applyAiAutoFilter(result);
+        incrementAnalyzeStats({
+          municipality: el('municipalitySelect').value || '',
+          hitCount: result.findings.length,
+          riskLabel: result.overallRisk,
+          categoryCounts: result.categoryTally || {}
+        });
+        render(result);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
     }
 
-    // 🌟 [핵심 로직 추가] 줄바꿈 복원 및 문단 단위 스마트 정제 함수
+    // ── AI 자동 필터링 (Google Gemini API 직접 호출) ─────────────────
+    // 사전·정규식 탐지는 여전히 1차 필터로 동작합니다. 여기서는 그 후보들을
+    // Gemini에 한 번에(배치) 보내 실제 독소조항인지 다시 판정하고, "독소조항"으로
+    // 확인된 항목만 최종적으로 사용자에게 노출합니다.
+    function getAiSettings() {
+      return {
+        autoFilter: localStorage.getItem(LS_KEYS.aiAutoFilter) !== '0' // 기본값: 켜짐 (관리자가 프록시를 설정했다면 전 직원 자동 적용)
+      };
+    }
+    function refreshAiSettingsStatus() {
+      const { autoFilter } = getAiSettings();
+      if (el('aiAutoFilterToggle')) el('aiAutoFilterToggle').checked = autoFilter;
+      const proxyConfigured = Boolean(GEMINI_PROXY_URL);
+      if (el('aiSettingsStatus')) {
+        if (!proxyConfigured) {
+          el('aiSettingsStatus').innerHTML = '• 관리자가 아직 AI 프록시(Cloudflare Worker) 주소를 설정하지 않았습니다. 설정 전까지는 사전·정규식 탐지 결과만 표시됩니다.';
+        } else {
+          el('aiSettingsStatus').innerHTML = autoFilter
+            ? '• AI 자동 필터링이 켜져 있습니다. 분석할 때마다 전 직원에게 동일하게 자동 적용됩니다.'
+            : '• AI 자동 필터링이 꺼져 있습니다. 체크하면 분석 결과에 자동 적용됩니다.';
+        }
+      }
+      if (el('aiFilterStatus') && (!autoFilter || !proxyConfigured)) {
+        el('aiFilterStatus').innerHTML = '• AI 자동 필터링이 꺼져 있습니다. 사전·정규식 탐지 결과를 그대로 표시합니다.';
+      }
+    }
+
+    // items: [{ idx, text, prev, next }] → 사내 AI 프록시(Cloudflare Worker)에 배치로 보내고 판정 배열을 받습니다.
+    // Gemini API 키는 Worker 안에만 있으며 이 브라우저에는 절대 내려오지 않습니다.
+    async function callGeminiBatchReview(items) {
+      const resp = await fetch(GEMINI_PROXY_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ model: GEMINI_MODEL, items })
+      });
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => '');
+        throw new Error(`AI 프록시 오류 (${resp.status}): ${errText.slice(0, 200)}`);
+      }
+      const data = await resp.json();
+      return Array.isArray(data.results) ? data.results : [];
+    }
+
+    // 분석 직후 자동으로 실행됩니다. AI가 "독소조항"으로 확인한 문구만
+    // result.findings에 남기고, 나머지는 화면에 노출되지 않습니다.
+    async function applyAiAutoFilter(result) {
+      const { autoFilter } = getAiSettings();
+      if (!autoFilter || !GEMINI_PROXY_URL) {
+        if (el('aiFilterStatus')) {
+          el('aiFilterStatus').innerHTML = !GEMINI_PROXY_URL
+            ? '• 관리자가 아직 AI 프록시를 설정하지 않아, 사전·정규식 탐지 결과를 그대로 표시합니다.'
+            : '• AI 자동 필터링이 꺼져 있습니다. 사전·정규식 탐지 결과를 그대로 표시합니다.';
+        }
+        return result;
+      }
+      const pureFindings = result.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard'));
+      if (!pureFindings.length) return result;
+
+      if (el('aiFilterStatus')) el('aiFilterStatus').innerHTML = `• 🤖 AI가 후보 ${pureFindings.length}건을 검토하는 중입니다…`;
+
+      const lines = el('sourceText').value.split(/\r?\n/).map(l => l.trim());
+      const items = pureFindings.map((f, i) => ({
+        idx: i,
+        text: f.text,
+        prev: lines[f.lineNo - 2] || '',
+        next: lines[f.lineNo] || ''
+      }));
+
+      const CHUNK = 20;
+      const verdictMap = new Map();
+      for (let start = 0; start < items.length; start += CHUNK) {
+        const chunk = items.slice(start, start + CHUNK);
+        if (el('aiFilterStatus') && items.length > CHUNK) {
+          el('aiFilterStatus').innerHTML = `• 🤖 AI 검토 중… (${Math.min(start + CHUNK, items.length)}/${items.length}건)`;
+        }
+        try {
+          const results = await callGeminiBatchReview(chunk);
+          results.forEach(r => { if (typeof r.idx === 'number') verdictMap.set(r.idx, { verdict: r.verdict, reason: r.reason }); });
+        } catch (e) {
+          console.error(e);
+          if (el('aiFilterStatus')) el('aiFilterStatus').innerHTML = `• ⚠ AI 검토 중 오류가 발생해 필터링 없이 사전·정규식 결과를 그대로 표시합니다: ${escapeHtml(e.message || '')}`;
+          return result; // 오류 시 결과를 가리지 않고 그대로 보여줍니다.
+        }
+      }
+
+      pureFindings.forEach((f, i) => {
+        const v = verdictMap.get(i);
+        f.aiReview = v ? { verdict: v.verdict, reason: v.reason } : { verdict: '판정 불명', reason: 'AI 응답에서 이 항목을 찾지 못해 안전하게 유지합니다.' };
+      });
+
+      const beforeCount = pureFindings.length;
+
+      result.findings = result.findings.filter(f => {
+        const isPure = !f.standardAdded || f.matched.some(k => k !== 'standard');
+        if (!isPure) return true; // 순수 "기준서 대비 추가문구"만 있는 항목은 별도 목록이므로 그대로 둡니다.
+        // AI 판정을 못 받은 항목("판정 불명")은 놓치지 않도록 안전하게 유지합니다.
+        return !f.aiReview || f.aiReview.verdict === '독소조항' || f.aiReview.verdict === '판정 불명';
+      });
+
+      recomputeAggregates(result);
+
+      const keptToxic = result.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard')).length;
+      if (el('aiFilterStatus')) {
+        el('aiFilterStatus').innerHTML = `• 🤖 AI 필터링 적용됨: 후보 ${beforeCount}건 중 <b>${keptToxic}건</b>만 실제 독소조항으로 확인되어 표시합니다.`;
+      }
+      return result;
+    }
+
+    // AI 필터링 이후 findings가 줄어든 상태를 반영해 요약 통계·체크리스트를 다시 계산합니다.
+    function recomputeAggregates(result) {
+      let formatCount = 0, penaltyCount = 0, unfairCount = 0, learnMatchCount = 0, customMatchCount = 0, standardAddedToxicCount = 0;
+      const categoryTally = {};
+      result.findings.forEach(f => {
+        if (f.matched.some(k => FORMAT_KEYS.includes(k))) formatCount += 1;
+        if (f.matched.includes('penalty')) penaltyCount += 1;
+        if (f.matched.some(k => UNFAIR_KEYS.includes(k))) unfairCount += 1;
+        if (f.learnMatched && f.learnMatched.length) learnMatchCount += 1;
+        if (f.customMatched && f.customMatched.length) customMatchCount += 1;
+        if (f.standardAdded && f.score > 5) standardAddedToxicCount += 1;
+        f.matched.forEach(k => { if (k !== 'standard') categoryTally[k] = (categoryTally[k] || 0) + 1; });
+      });
+      result.formatCount = formatCount;
+      result.penaltyCount = penaltyCount;
+      result.unfairCount = unfairCount;
+      result.learnMatchCount = learnMatchCount;
+      result.customMatchCount = customMatchCount;
+      result.standardAddedToxicCount = standardAddedToxicCount;
+      result.categoryTally = categoryTally;
+
+      const toxicCount = result.findings.filter(f => f.severity === 'high').length;
+      const midCount = result.findings.filter(f => f.severity === 'mid').length;
+      const overallScore = result.findings.reduce((sum, f) => sum + f.score, 0);
+      let overallRisk = '낮음';
+      if (overallScore >= 30 || toxicCount >= 2 || standardAddedToxicCount >= 1) overallRisk = '높음';
+      else if (overallScore >= 12 || midCount >= 2) overallRisk = '보통';
+      result.overallScore = overallScore;
+      result.overallRisk = overallRisk;
+      result.checklist = buildChecklist(result.findings, {});
+    }
+
+    el('aiAutoFilterToggle')?.addEventListener('change', (e) => {
+      localStorage.setItem(LS_KEYS.aiAutoFilter, e.target.checked ? '1' : '0');
+      refreshAiSettingsStatus();
+    });
+
+    // ── 엑셀 체크리스트 내보내기 (위험도별 색상) ───────────────────
+    el('excelDownloadBtn').addEventListener('click', async () => {
+      const data = window.__lastResult;
+      if (!data) return alert('먼저 분석을 실행해 주세요.');
+      try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'KG 독소조항 탐지기';
+        workbook.created = new Date();
+        const sheet = workbook.addWorksheet('독소조항 체크리스트');
+
+        sheet.columns = [
+          { header: '순번', key: 'no', width: 6 },
+          { header: '위험도', key: 'severity', width: 10 },
+          { header: '점수', key: 'score', width: 8 },
+          { header: '줄', key: 'lineNo', width: 6 },
+          { header: '탐지 유형', key: 'types', width: 24 },
+          { header: '문구', key: 'text', width: 70 },
+          { header: '사유', key: 'reason', width: 50 },
+          { header: 'AI 재검토', key: 'ai', width: 40 }
+        ];
+        sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123869' } };
+        sheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        const severityFill = {
+          high: 'FFF8CACC',
+          mid: 'FFFCE8C3',
+          low: 'FFD9F2E6'
+        };
+        const severityLabel = { high: '높음', mid: '보통', low: '낮음' };
+
+        const pureFindings = data.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard'));
+        pureFindings.forEach((f, idx) => {
+          const aiText = f.aiReview ? `${f.aiReview.verdict} - ${f.aiReview.reason}` : '';
+          const row = sheet.addRow({
+            no: idx + 1,
+            severity: severityLabel[f.severity] || f.severity,
+            score: f.score,
+            lineNo: f.lineNo,
+            types: f.matched.filter(k => k !== 'standard').map(k => categories[k]?.label || k).join(', '),
+            text: f.text,
+            reason: f.reason,
+            ai: aiText
+          });
+          const fillColor = severityFill[f.severity] || 'FFFFFFFF';
+          row.eachCell(cell => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+            cell.alignment = { wrapText: true, vertical: 'top' };
+          });
+        });
+
+        sheet.autoFilter = { from: 'A1', to: 'H1' };
+        sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+        // 추가문구 시트
+        const addSheet = workbook.addWorksheet('기준서 대비 추가문구');
+        addSheet.columns = [
+          { header: '순번', key: 'no', width: 6 },
+          { header: '줄', key: 'lineNo', width: 6 },
+          { header: '독소조항 의심', key: 'toxic', width: 14 },
+          { header: '기준 일치율', key: 'sim', width: 12 },
+          { header: '문구', key: 'text', width: 70 },
+          { header: '가장 유사한 기준 문구', key: 'best', width: 60 }
+        ];
+        addSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        addSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123869' } };
+        (data.additionalClauses || []).forEach((c, idx) => {
+          const isToxic = data.findings.some(f => f.lineNo === c.lineNo && f.standardAdded && f.score > 5);
+          const row = addSheet.addRow({
+            no: idx + 1,
+            lineNo: c.lineNo,
+            toxic: isToxic ? '⚠ 의심' : '-',
+            sim: `${Math.round((c.similarity || 0) * 100)}%`,
+            text: c.text,
+            best: c.bestClause || ''
+          });
+          row.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isToxic ? 'FFF8CACC' : 'FFFFFFFF' } }; cell.alignment = { wrapText: true, vertical: 'top' }; });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `독소조항_체크리스트_${getDateParts().key}.xlsx`;
+        document.body.appendChild(a); a.click(); a.remove();
+      } catch (e) {
+        console.error(e);
+        alert('엑셀 파일 생성 중 오류가 발생했습니다.');
+      }
+    });
+
+    // ── 통계 대시보드 ──────────────────────────────────────────
+    function renderBarChart(containerId, rows, colorFn) {
+      const container = el(containerId);
+      if (!container) return;
+      if (!rows.length) { container.innerHTML = '<div class="empty">아직 데이터가 없습니다.</div>'; return; }
+      const max = Math.max(1, ...rows.map(r => r.value));
+      container.innerHTML = rows.map(r => {
+        const color = colorFn ? colorFn(r) : 'var(--primary)';
+        const widthPct = Math.max(4, Math.round((r.value / max) * 100));
+        return `
+          <div class="bar-row">
+            <div class="bar-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${widthPct}%; background:${color};"></div></div>
+            <div class="bar-value">${r.value.toLocaleString()}건</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getDashboardMonths() {
+      const saved = localStorage.getItem(LS_KEYS.dashboardMonths);
+      return saved !== null ? Number(saved) : 6; // 기본값: 최근 6개월
+    }
+
+    function renderDashboard() {
+      const months = getDashboardMonths();
+      if (el('dashboardPeriodSelect')) el('dashboardPeriodSelect').value = String(months);
+
+      const all = statsAnalysisLogs || [];
+      const cutoff = months > 0 ? Date.now() - months * 30 * 24 * 60 * 60 * 1000 : 0;
+      const logs = months > 0 ? all.filter(log => (log.timestamp || 0) >= cutoff) : all;
+
+      if (el('dashboardMeta')) {
+        const periodLabel = months > 0 ? `최근 ${months}개월` : '전체 기간';
+        el('dashboardMeta').textContent = logs.length
+          ? `${periodLabel} 기준 분석 기록 ${logs.length.toLocaleString()}건을 집계했습니다.`
+          : `${periodLabel} 동안 집계할 분석 기록이 없습니다.`;
+      }
+
+      const muniTally = {};
+      const riskTally = { 높음: 0, 보통: 0, 낮음: 0 };
+      const categoryTally = {};
+      logs.forEach(log => {
+        const muniName = log.municipality || '지자체 미지정';
+        muniTally[muniName] = (muniTally[muniName] || 0) + 1;
+        if (riskTally[log.riskLabel] !== undefined) riskTally[log.riskLabel] += 1;
+        const cc = log.categoryCounts || {};
+        Object.keys(cc).forEach(k => { categoryTally[k] = (categoryTally[k] || 0) + (cc[k] || 0); });
+      });
+
+      const muniRows = Object.entries(muniTally)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([label, value]) => ({ label, value }));
+      renderBarChart('chartMunicipality', muniRows, () => 'var(--primary)');
+
+      const riskColor = { 높음: '#e5484d', 보통: '#f5a524', 낮음: '#12946a' };
+      const riskRows = Object.entries(riskTally).map(([label, value]) => ({ label, value }));
+      renderBarChart('chartRisk', riskRows, (r) => riskColor[r.label] || 'var(--primary)');
+
+      const categoryRows = Object.entries(categoryTally)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([key, value]) => ({ label: categories[key]?.label || key, value }));
+      renderBarChart('chartCategory', categoryRows, () => 'var(--primary)');
+    }
+
+    // 🌟 줄바꿈 복원 및 문단 단위 스마트 정제 함수
     function smartMergeLines(text) {
-      // 1. 가로 공백(스페이스/탭)만 압축하고 줄바꿈(\n)은 절대 보존합니다.
       const rawLines = text.split(/\r?\n/)
                            .map(l => l.replace(/[^\S\r\n]+/g, ' ').trim())
                            .filter(Boolean);
-      
+
       const mergedLines = [];
-      
-      // 2. 공공문서 특유의 글머리 기호(목차) 패턴 감지 정규식
-      // (예: 1. 가. (1) ㅇ - Ⅰ. A. 등)
       const bulletRegex = /^([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+\.|[A-Z]\.|\d+[\.\)]|[가-하][\.\)]|\([가-하]\)|\([0-9]+\)|[ㅇ○●□■\-\*※])/;
-      
+
       for (let line of rawLines) {
         if (mergedLines.length === 0) {
           mergedLines.push(line);
         } else {
           let prevLine = mergedLines[mergedLines.length - 1];
-          // 현재 줄이 새로운 글머리 기호로 시작하거나, 이전 줄이 문장 기호(., :, ;)로 확실히 끝난 경우 줄을 나눕니다.
           if (bulletRegex.test(line) || /[.:;]$/.test(prevLine)) {
             mergedLines.push(line);
           } else {
-            // 그 외의 경우 단순히 PDF 페이지 너비 때문에 줄바꿈 된 것으로 간주하고 앞 문장에 이어붙입니다.
             mergedLines[mergedLines.length - 1] += ' ' + line;
           }
         }
@@ -1445,42 +2100,33 @@
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 1 });
         const content = await page.getTextContent();
-
-        // 페이지 하단 쪽 번호("- 7 -" 등)는 문서 생성 방식에 따라 본문 스트림의
-        // 맨 앞에 오기도 하고 맨 뒤에 오기도 해서, "줄 순서"로는 안전하게 걸러낼
-        // 수 없습니다. 대신 Y좌표가 페이지 하단 여백(대략 하단 5.5%) 안에 있는
-        // 텍스트는 통째로 건너뛰는 방식으로, 위치 기준으로 걸러냅니다.
         const footerThreshold = viewport.height * 0.055;
 
         let pageText = '';
         let lastY = null;
 
         content.items.forEach(item => {
-          const currentY = item.transform[5]; // Y좌표 기반 줄바꿈 감지
-          if (currentY < footerThreshold) return; // 하단 쪽 번호 영역은 건너뜀
+          const currentY = item.transform[5];
+          if (currentY < footerThreshold) return;
 
           if (lastY !== null && Math.abs(currentY - lastY) > 5) {
-            pageText += '\n'; // Y좌표 차이가 나면 새 줄로 간주
+            pageText += '\n';
           }
-          
+
           pageText += item.str;
           lastY = currentY;
-          
+
           if (item.hasEOL) {
             pageText += '\n';
             lastY = null;
           }
         });
-        
+
         pages.push(pageText);
       }
       return pages.join('\n');
     }
 
-    // hp:t(텍스트 run) 안에 <hp:fwSpace/> 같은 인라인 요소가 섞여 있으면 자식 노드가
-    // 여러 개가 되는데, 이 함수는 그 모든 자식을 순회해 텍스트는 그대로 이어붙이고
-    // 인라인 요소는 공백 한 칸으로 치환합니다. (이전 버전은 자식이 정확히 1개인
-    // hp:t만 인정해서, fwSpace가 섞인 run 전체의 텍스트를 통째로 버렸습니다.)
     function extractHwpxRunText(node) {
       let out = '';
       Array.from(node.childNodes || []).forEach(child => {
@@ -1489,10 +2135,6 @@
       return out;
     }
 
-    // 문단(hp:p) 하나에 속한 여러 run(hp:t)을 한 줄로 묶어 반환합니다. 표가 문단
-    // 내부에 중첩된 경우, 표 셀 안의 문단들은 각자 자신의 줄로 별도 처리되어야 하므로
-    // (재귀 중 만나는 하위 hp:p는) 여기서 직접 텍스트로 합치지 않고 collectHwpxLines가
-    // 별도의 줄로 push하도록 넘깁니다.
     function collectHwpxParagraphInline(node, lines) {
       if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || '';
       if (!node.tagName) return '';
@@ -1521,10 +2163,6 @@
     async function extractTextFromHwpx(file) {
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
-      // 본문(Contents/sectionN.xml)만 대상으로 합니다. header.xml(글머리 번호 서식 등),
-      // settings.xml(뷰어 설정값) 같은 파일도 확장자가 .xml이라 이전 버전에서는
-      // 함께 스캔되어 "^1.", "false", "100" 같은 본문과 무관한 텍스트가 섞여
-      // 들어가는 문제가 있었습니다.
       const sectionFiles = Object.keys(zip.files)
         .filter(name => /(^|\/)Contents\/section\d+\.xml$/i.test(name))
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
@@ -1562,12 +2200,23 @@
       }
     }
 
-    function mergeLearnedClauses(newClauses) {
-
-      const all = [...learnedClauses, ...newClauses];
-      learnedClauses = [...new Set(all)];
-      saveJson(LS_KEYS.learnedClauses, learnedClauses);
-      renderCustomKeywords();
+    async function mergeLearnedClauses(newClauses) {
+      if (FIREBASE_READY) {
+        const existingTexts = new Set(learnedClauses.map(c => typeof c === 'string' ? c : c.clause));
+        const toAdd = newClauses.filter(c => !existingTexts.has(c));
+        if (!toAdd.length) return;
+        const batch = db.batch();
+        toAdd.forEach(clause => {
+          const ref = db.collection('learnedClauses').doc();
+          batch.set(ref, { clause, addedAt: Date.now(), addedBy: ADMIN_EMAIL });
+        });
+        try { await batch.commit(); } catch (e) { console.error('학습 문구 저장 실패:', e); alert('학습 문구 저장 중 오류가 발생했습니다.'); }
+      } else {
+        const all = [...learnedClauses, ...newClauses];
+        learnedClauses = [...new Set(all)];
+        saveJson(LS_KEYS.learnedClauses, learnedClauses);
+        renderCustomKeywords();
+      }
     }
 
     el('analyzeBtn').addEventListener('click', doAnalyze);
@@ -1579,8 +2228,8 @@
       el('additionalFindings').innerHTML = '<div class="empty">지자체 기준서를 선택하고 분석하면 추가문구가 표시됩니다.</div>';
       el('additionalHint').textContent = '기준서 대비 추가된 문구';
       el('checklist').innerHTML = '<div class="empty">분석 결과에 따라 체크리스트가 자동 생성됩니다.</div>';
-      el('standardAddedCount').textContent = '0';
       el('standardAddedToxicCount').textContent = '0';
+      el('unfairCount').textContent = '0';
       window.__lastResult = null;
     });
 
@@ -1588,7 +2237,7 @@
       const data = window.__lastResult;
       if (!data) return alert('먼저 분석을 실행해 주세요.');
       const lines = ['PQ/QBS/TP/SOQ 독소조항 분석 결과\n', `종합 위험도: ${data.overallRisk}`, `의심 조항 총계: ${data.findings.length}\n\n[의심 조항]`];
-      data.findings.forEach((f, idx) => lines.push(`${idx + 1}. 점수 ${f.score} | 줄 ${f.lineNo} | ${f.text}\n   사유: ${f.reason}`));
+      data.findings.forEach((f, idx) => lines.push(`${idx + 1}. 점수 ${f.score} | 줄 ${f.lineNo} | ${f.text}\n   사유: ${f.reason}${f.aiReview ? `\n   AI 판단: ${f.aiReview.verdict} - ${f.aiReview.reason}` : ''}`));
       const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'pq-toxic-clause-report.txt';
       document.body.appendChild(a); a.click(); a.remove();
@@ -1608,7 +2257,7 @@
       const file = event.target.files?.[0];
       if (!file) return;
       const clauses = parseLearnedClauses(await file.text());
-      mergeLearnedClauses(clauses);
+      await mergeLearnedClauses(clauses);
       alert(`학습 문구 ${clauses.length}건을 불러왔습니다.`);
       event.target.value = '';
     });
@@ -1649,18 +2298,25 @@
       const text = el('sourceText').value.trim();
       if (!text) return alert('문서 입력창에 텍스트가 있어야 보조학습할 수 있습니다.');
       const lines = parseLearnedClauses(text);
-      mergeLearnedClauses(lines);
+      await mergeLearnedClauses(lines);
       alert(`현재 입력문서에서 ${lines.length}건을 학습 데이터로 누적했습니다.`);
     });
 
     el('clearLearnBtn').addEventListener('click', async () => {
       if (!(await requireAdmin('학습데이터 초기화'))) return;
       if (!confirm('학습된 독소조항 데이터를 모두 삭제할까요?')) return;
-      learnedClauses = []; saveJson(LS_KEYS.learnedClauses, learnedClauses); renderCustomKeywords();
+      if (FIREBASE_READY) {
+        const batch = db.batch();
+        const snap = await db.collection('learnedClauses').get();
+        snap.forEach(doc => batch.delete(doc.ref));
+        try { await batch.commit(); } catch (e) { console.error(e); alert('삭제 중 오류가 발생했습니다.'); }
+      } else {
+        learnedClauses = []; saveJson(LS_KEYS.learnedClauses, learnedClauses); renderCustomKeywords();
+      }
     });
 
     el('clearFalsePositivesBtn').addEventListener('click', () => {
-      if (!confirm('수동으로 등록한 [오탐지 제외 기록]을 모두 초기화할까요?\n(초기화 후 재분석 시 제외되었던 항목이 다시 나타납니다)')) return;
+      if (!confirm('내 브라우저에 등록된 [오탐지 제외 기록]을 모두 초기화할까요?\n(초기화 후 재분석 시 제외되었던 항목이 다시 나타납니다. 전사 화이트리스트에는 영향이 없습니다)')) return;
       falsePositives = []; saveJson(LS_KEYS.falsePositives, falsePositives); alert('초기화되었습니다.'); doAnalyze();
     });
 
@@ -1712,6 +2368,11 @@
     el('municipalitySelect').addEventListener('change', () => {
       updateStandardStatus();
       if (el('sourceText').value.trim()) doAnalyze();
+    });
+    el('refreshDashboardBtn')?.addEventListener('click', () => renderDashboard());
+    el('dashboardPeriodSelect')?.addEventListener('change', (e) => {
+      localStorage.setItem(LS_KEYS.dashboardMonths, e.target.value);
+      renderDashboard();
     });
 
     el('openStandardFileBtn').addEventListener('click', async () => {
@@ -1774,11 +2435,17 @@
       const shareNote = '• 이 데이터는 Firebase 공유 데이터베이스에 저장되어 <b>전 직원이 실시간으로 함께</b> 봅니다.';
       if (el('feedbackStorageNote')) el('feedbackStorageNote').innerHTML = shareNote;
       if (el('caseShareStorageNote')) el('caseShareStorageNote').innerHTML = shareNote;
+      if (el('topbarSyncBadge')) el('topbarSyncBadge').textContent = '🟢 공유 DB 연결됨 (전 직원 실시간 공유)';
 
       db.collection('keywords').orderBy('addedAt', 'asc').onSnapshot(snap => {
         customKeywords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderCustomKeywords();
       }, err => console.error('키워드 동기화 오류:', err));
+
+      db.collection('learnedClauses').orderBy('addedAt', 'asc').onSnapshot(snap => {
+        learnedClauses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderCustomKeywords();
+      }, err => console.error('학습 문구 동기화 오류:', err));
 
       db.collection('standards').onSnapshot(snap => {
         standardLibraries = {};
@@ -1796,24 +2463,46 @@
         renderCaseShares();
       }, err => console.error('사례공유 동기화 오류:', err));
 
-      db.collection('analysisLogs').orderBy('timestamp', 'desc').limit(20).onSnapshot(snap => {
-        recentAnalysisLogs = snap.docs.map(d => d.data());
+      db.collection('analysisLogs').orderBy('timestamp', 'desc').limit(500).onSnapshot(snap => {
+        const logs = snap.docs.map(d => d.data());
+        recentAnalysisLogs = logs.slice(0, 20);
+        statsAnalysisLogs = logs;
         renderAnalysisLogs();
+        renderDashboard();
       }, err => console.error('분석기록 동기화 오류:', err));
 
       db.collection('counters').doc('analysis').onSnapshot(doc => {
         analyzeStats = doc.exists ? doc.data() : { dateKey: '', todayCount: 0, totalCount: 0 };
         updateMemoStats();
       }, err => console.error('분석횟수 동기화 오류:', err));
+
+      db.collection('falsePositiveReports').onSnapshot(snap => {
+        falsePositiveReports = snap.docs.map(d => d.data());
+        renderGlobalWhitelistCandidates();
+      }, err => console.error('오탐지 신고 동기화 오류:', err));
+
+      db.collection('globalWhitelist').onSnapshot(snap => {
+        globalWhitelist = {};
+        snap.forEach(d => { globalWhitelist[d.id] = d.data(); });
+        globalWhitelistHashSet = new Set(Object.keys(globalWhitelist));
+        renderGlobalWhitelistCandidates();
+        if (window.__lastResult && el('sourceText').value.trim()) {
+          // 화이트리스트가 갱신되면 최신 기준으로 다시 계산되도록 재분석을 유도합니다.
+        }
+      }, err => console.error('화이트리스트 동기화 오류:', err));
     } else {
+      if (el('topbarSyncBadge')) el('topbarSyncBadge').textContent = '⚪ 이 브라우저에만 저장 (공유 DB 미연결)';
       renderCustomKeywords();
       renderStandardLibraries();
       renderFeedbackList();
       renderCaseShares();
       renderAnalysisLogs();
+      renderDashboard();
       updateMemoStats();
+      renderGlobalWhitelistCandidates();
     }
     updateAdminUnlockButtons();
+    refreshAiSettingsStatus();
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
