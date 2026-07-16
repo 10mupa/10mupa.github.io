@@ -411,7 +411,7 @@
             <span>🤖 AI 자동 필터링 (Gemini, 전 직원 공통 적용)</span>
           </summary>
           <p>
-            [독소조항 분석] 버튼을 누르면 사전·정규식으로 탐지된 후보 문구들을 <b>사내 AI 프록시(Cloudflare Worker)를 거쳐 Google Gemini가 다시 검토</b>하여,
+            [독소조항 분석] 버튼을 누르면 사전·정규식으로 탐지된 후보 문구들을 <b>사내 AI 프록시(Firebase Cloud Functions)를 거쳐 Google Gemini가 다시 검토</b>하여,
             실제로 독소조항이라고 판단한 문구만 최종 목록에 남깁니다. <b>Gemini API 키는 이 파일이나 브라우저 어디에도 저장되지 않고
             서버(Worker) 안에만 있으며</b>, 각 직원이 개별로 키를 설정할 필요 없이 관리자가 한 번 배포해두면 전 직원에게 자동 적용됩니다.
             탐지된 후보 문구(및 앞뒤 한 줄)만 전송되고 문서 전체는 전송되지 않습니다.
@@ -611,7 +611,7 @@
     <div class="footer">
       ※ 공고문·기준서 본문의 분석은 항상 사용자 PC(브라우저) 내부에서만 이루어집니다.<br/>
       ※ 표준 기준서·탐지 키워드·학습 문구·분석횟수·피드백·독소조항 사례·오탐지 신고 데이터는 전 직원 공유를 위해 Firebase 데이터베이스에 저장됩니다.<br/>
-      ※ AI 자동 필터링 기능을 켜면 <b>탐지된 후보 문구(및 앞뒤 한 줄)만</b> 사내 AI 프록시(Cloudflare Worker)를 거쳐 Google Gemini로 전송됩니다. 꺼두면 전송되지 않습니다.<br/>
+      ※ AI 자동 필터링 기능을 켜면 <b>탐지된 후보 문구(및 앞뒤 한 줄)만</b> 사내 AI 프록시(Firebase Cloud Functions)를 거쳐 Google Gemini로 전송됩니다. 꺼두면 전송되지 않습니다.<br/>
       Copyright 2026 KG Technova All rights reserved.
     </div>
   </div>
@@ -655,18 +655,21 @@
     const GLOBAL_WHITELIST_THRESHOLD = 5; // 서로 다른 신고자가 이 수 이상이면 승인 후보로 올라옵니다.
 
     // ============================================================
-    // AI 자동 필터링용 프록시 주소 (Cloudflare Worker)
+    // AI 자동 필터링용 프록시 주소 (Firebase Cloud Functions)
     // ------------------------------------------------------------
-    // Gemini API 키는 절대 이 파일에 넣지 마세요. 대신 Cloudflare Worker를 배포해
-    // 그 서버가 키를 갖고 Gemini를 대신 호출하도록 하고, 여기에는 그 Worker의
-    // 공개 URL만 적어둡니다 (예: https://toxcop-ai-proxy.YOUR-SUBDOMAIN.workers.dev).
+    // Gemini API 키는 절대 이 파일에 넣지 마세요. 대신 Firebase Cloud Functions를
+    // 배포해 그 함수가 키를 갖고 Gemini를 대신 호출하도록 하고, 여기에는 그
+    // 함수의 공개 URL만 적어둡니다
+    // (예: https://asia-northeast3-toxcop-311a8.cloudfunctions.net/geminiProxy).
     // 이 URL 자체는 비밀값이 아니라서 코드에 그대로 넣어도 안전합니다 — 실제 보안은
-    // Worker 안의 GEMINI_API_KEY(서버측 비밀값)와 Origin 제한이 담당합니다.
+    // 함수 안의 GEMINI_API_KEY(Secret Manager 비밀값)와 Origin 제한이 담당합니다.
     // 비워두면 AI 자동 필터링 없이 사전·정규식 탐지 결과만 그대로 표시됩니다.
-    // 배포 방법은 함께 제공된 gemini-proxy-worker.js를 참고하세요.
+    // 배포 방법은 함께 제공된 functions/index.js를 참고하세요.
+    // (예전에 시도했던 Cloudflare Worker 방식은 Gemini API의 지역 차단 오류가
+    // 간헐적으로 발생해 Firebase Cloud Functions 방식으로 대체했습니다.)
     // ============================================================
-    const GEMINI_PROXY_URL = 'https://super-pine-7a6b.solesaerom.workers.dev'; // 예: 'https://toxcop-ai-proxy.your-subdomain.workers.dev'
-    const GEMINI_MODEL = 'gemini-3.5-flash';
+    const GEMINI_PROXY_URL = 'https://asia-northeast3-toxcop-311a8.cloudfunctions.net/geminiProxy';
+    const GEMINI_MODEL = 'gemini-3.5-flash'; // gemini-2.5-flash가 신규 발급 키에서 조기 차단되어 최신 모델로 변경
 
     let db = null, auth = null;
     if (FIREBASE_READY) {
@@ -1779,7 +1782,7 @@
       const proxyConfigured = Boolean(GEMINI_PROXY_URL);
       if (el('aiSettingsStatus')) {
         if (!proxyConfigured) {
-          el('aiSettingsStatus').innerHTML = '• 관리자가 아직 AI 프록시(Cloudflare Worker) 주소를 설정하지 않았습니다. 설정 전까지는 사전·정규식 탐지 결과만 표시됩니다.';
+          el('aiSettingsStatus').innerHTML = '• 관리자가 아직 AI 프록시(Firebase Cloud Functions) 주소를 설정하지 않았습니다. 설정 전까지는 사전·정규식 탐지 결과만 표시됩니다.';
         } else {
           el('aiSettingsStatus').innerHTML = autoFilter
             ? '• AI 자동 필터링이 켜져 있습니다. 분석할 때마다 전 직원에게 동일하게 자동 적용됩니다.'
@@ -1791,7 +1794,7 @@
       }
     }
 
-    // items: [{ idx, text, prev, next }] → 사내 AI 프록시(Cloudflare Worker)에 배치로 보내고 판정 배열을 받습니다.
+    // items: [{ idx, text, prev, next }] → 사내 AI 프록시(Firebase Cloud Functions)에 배치로 보내고 판정 배열을 받습니다.
     // Gemini API 키는 Worker 안에만 있으며 이 브라우저에는 절대 내려오지 않습니다.
     async function callGeminiBatchReview(items) {
       const resp = await fetch(GEMINI_PROXY_URL, {
