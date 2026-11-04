@@ -277,7 +277,7 @@
             <li>실적·자격 과다제한, 과다 배상책임, 지식재산권 부당이관도 별도 카테고리로 탐지</li>
             <li>학습 문구와 유사한 줄은 추가 가점, 표준 기준서 대비 추가 문구는 가중치 10 부여</li>
             <li>사용자 키워드·학습 문구는 전 직원 공유 DB에 저장되어 재접속 후에도 유지</li>
-            <li>5명 이상이 같은 문구를 오탐지로 신고하면 관리자 승인 후 전사 화이트리스트로 자동 정화</li>
+            <li>3명 이상이 같은 문구를 오탐지로 신고하면 관리자 승인 후 전사 화이트리스트로 자동 정화</li>
           </ul>
         </div>
         <div class="small" id="memoStats" style="margin-top:14px; color: var(--navy);">-</div>
@@ -409,7 +409,7 @@
             <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
           </summary>
           <p>
-            여러 직원이 같은 문구를 <b>[오탐지 제외]</b> 처리하면 자동으로 후보에 오릅니다. 서로 다른 사용자 <b>5명 이상</b>이 동일 문구를
+            여러 직원이 같은 문구를 <b>[오탐지 제외]</b> 처리하면 자동으로 후보에 오릅니다. 서로 다른 사용자 <b>3명 이상</b>이 동일 문구를
             오탐지로 신고하면 아래 후보 목록에 나타나며, 관리자가 승인하면 <b>전사 화이트리스트</b>에 등록되어
             이후 모든 직원의 분석 결과에서 자동으로 제외됩니다.
           </p>
@@ -418,9 +418,26 @@
             <span class="pill">전사 화이트리스트 등록 <b id="whitelistCount">0</b>건</span>
           </div>
           <div id="candidateList" class="keyword-list" style="margin-top:14px;">
-            <div class="empty">아직 5명 이상이 신고한 오탐지 후보가 없습니다.</div>
+            <div class="empty">아직 3명 이상이 신고한 오탐지 후보가 없습니다.</div>
           </div>
           <div id="whitelistList" class="keyword-list" style="margin-top:14px;"></div>
+        </details>
+
+        <details class="keyword-box">
+          <summary>
+            <span>🔎 미탐지 신고 학습 관리 (키지 체커)</span>
+            <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
+          </summary>
+          <p>
+            키지 체커(크롬 확장프로그램)에서 직원들이 <b>[놓친 독소조항 신고]</b>한 문구입니다. 서로 다른 사용자 <b>3명 이상</b>이 같은 문구를
+            신고하면 아래 후보 목록에 나타나며, 관리자가 승인하면 <b>학습 문구</b>로 등록되어 이후 모든 직원의 결과에 자동으로 표기됩니다.
+          </p>
+          <div class="toolbar">
+            <span class="pill">학습 승인 대기 <b id="missedCandidateCount">0</b>건</span>
+          </div>
+          <div id="missedCandidateList" class="keyword-list" style="margin-top:14px;">
+            <div class="empty">아직 3명 이상이 신고한 미탐지 후보가 없습니다.</div>
+          </div>
         </details>
 
         <details class="keyword-box" id="aiSettingsBox">
@@ -669,7 +686,7 @@
     };
     const ADMIN_EMAIL = 'solesaerom@gmail.com'; // Firebase Authentication에 이 이메일로 관리자 계정을 만들어 두세요.
     const FIREBASE_READY = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY';
-    const GLOBAL_WHITELIST_THRESHOLD = 5; // 서로 다른 신고자가 이 수 이상이면 승인 후보로 올라옵니다.
+    const GLOBAL_WHITELIST_THRESHOLD = 3; // 서로 다른 신고자가 이 수 이상이면 승인 후보로 올라옵니다.
 
     // ============================================================
     // AI 자동 필터링용 프록시 주소 (Firebase Cloud Functions)
@@ -743,6 +760,7 @@
     let recentAnalysisLogs = [];
     let statsAnalysisLogs = loadJson(LS_KEYS.localAnalysisLogs, []); // 대시보드 집계용 (비공유 모드 대비)
     let falsePositiveReports = []; // Firestore 실시간 구독
+    let missedReports = []; // 확장프로그램의 미탐지 신고 (Firestore 실시간 구독)
     let globalWhitelist = loadJson(LS_KEYS.globalWhitelistLocal, {}); // { hash: {normText, rawText, ...} }
     let globalWhitelistHashSet = new Set(Object.keys(globalWhitelist));
 
@@ -1162,6 +1180,68 @@
       }
     }
 
+    // ── 미탐지 신고 후보 (확장프로그램에서 직원이 신고한 놓친 독소조항) ──────────
+    function computeMissedCandidates() {
+      const groups = new Map();
+      missedReports.forEach(r => {
+        if (!r.hash || !r.normText) return;
+        if (!groups.has(r.hash)) groups.set(r.hash, { hash: r.hash, normText: r.normText, rawText: r.rawText || r.normText, reporters: new Set() });
+        groups.get(r.hash).reporters.add(r.reporterId || 'unknown');
+      });
+      const learnedSet = new Set(learnedClauses.map(c => normalizeCompareText(learnedClauseText(c))));
+      return [...groups.values()]
+        .filter(g => !learnedSet.has(g.normText))
+        .map(g => ({ ...g, reportCount: g.reporters.size }))
+        .filter(g => g.reportCount >= GLOBAL_WHITELIST_THRESHOLD)
+        .sort((a, b) => b.reportCount - a.reportCount);
+    }
+
+    function renderMissedCandidates() {
+      const listEl = el('missedCandidateList');
+      if (!listEl) return;
+      const candidates = computeMissedCandidates();
+      if (el('missedCandidateCount')) el('missedCandidateCount').textContent = candidates.length;
+      if (!candidates.length) {
+        listEl.innerHTML = `<div class="empty">아직 ${GLOBAL_WHITELIST_THRESHOLD}명 이상이 신고한 미탐지 후보가 없습니다.</div>`;
+        return;
+      }
+      listEl.innerHTML = candidates.map(c => `
+        <div class="item">
+          <div class="item-top">
+            <div class="badges"><span class="badge yellow">신고자 ${c.reportCount}명</span></div>
+            <div class="row" style="flex:0 0 auto; gap:6px;">
+              <button class="ok-btn" style="padding:4px 8px; font-size:11px;" onclick="approveMissed('${c.hash}')">학습 승인</button>
+              <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="dismissMissed('${c.hash}')">신고 초기화</button>
+            </div>
+          </div>
+          <div class="excerpt">${escapeHtml(c.rawText)}</div>
+        </div>
+      `).join('');
+    }
+
+    window.approveMissed = async function(hash) {
+      if (!(await requireAdmin('미탐지 문구 학습 승인'))) return;
+      const c = computeMissedCandidates().find(x => x.hash === hash);
+      if (!c) return alert('후보를 찾을 수 없습니다.');
+      await mergeLearnedClauses([c.rawText]);
+      await clearMissedReports(hash);
+      alert('학습 문구로 등록했습니다. 앞으로 모든 직원의 결과에 자동 표기됩니다.');
+    };
+    window.dismissMissed = async function(hash) {
+      if (!(await requireAdmin('미탐지 신고 초기화'))) return;
+      if (!confirm('이 문구에 대한 신고 기록을 모두 삭제할까요?')) return;
+      await clearMissedReports(hash);
+    };
+    async function clearMissedReports(hash) {
+      if (!FIREBASE_READY) return;
+      try {
+        const snap = await db.collection('missedReports').where('hash', '==', hash).get();
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      } catch (e) { console.error(e); alert('신고 기록 삭제 중 오류가 발생했습니다. (firestore.rules에 missedReports 삭제 권한이 필요합니다)'); }
+    }
+
     window.approveGlobalWhitelist = async function(hash) {
       if (!(await requireAdmin('글로벌 화이트리스트 승인'))) return;
       const candidate = computeFalsePositiveCandidates().find(c => c.hash === hash);
@@ -1486,7 +1566,7 @@
     // 같은 문구를 여러 번 눌러도 문서ID가 (문구해시_신고자ID)로 고정되어 1명으로만 집계됩니다.
     window.markFalsePositive = async function(idx) {
       const f = window.__lastResult.findings[idx];
-      if (!confirm(`이 문구를 오탐지로 등록하여 다음 검사부터 제외하시겠습니까?\n\n"${f.text}"\n\n(공유 DB 연결 시, 서로 다른 5명 이상이 같은 문구를 신고하면 관리자 승인을 거쳐 전 직원에게 자동 적용됩니다.)`)) return;
+      if (!confirm(`이 문구를 오탐지로 등록하여 다음 검사부터 제외하시겠습니까?\n\n"${f.text}"\n\n(공유 DB 연결 시, 서로 다른 3명 이상이 같은 문구를 신고하면 관리자 승인을 거쳐 전 직원에게 자동 적용됩니다.)`)) return;
 
       if (!falsePositives.includes(f.text)) {
         falsePositives.push(f.text);
@@ -2472,6 +2552,7 @@
       db.collection('learnedClauses').orderBy('addedAt', 'asc').onSnapshot(snap => {
         learnedClauses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderCustomKeywords();
+        renderMissedCandidates();
       }, err => console.error('학습 문구 동기화 오류:', err));
 
       db.collection('standards').onSnapshot(snap => {
@@ -2507,6 +2588,11 @@
         falsePositiveReports = snap.docs.map(d => d.data());
         renderGlobalWhitelistCandidates();
       }, err => console.error('오탐지 신고 동기화 오류:', err));
+
+      db.collection('missedReports').onSnapshot(snap => {
+        missedReports = snap.docs.map(d => d.data());
+        renderMissedCandidates();
+      }, err => console.error('미탐지 신고 동기화 오류:', err));
 
       db.collection('globalWhitelist').onSnapshot(snap => {
         globalWhitelist = {};
