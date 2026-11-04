@@ -208,6 +208,23 @@
     .bar-value { flex: 0 0 46px; font-size: 12px; color: var(--muted); font-weight: 700; }
     .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
     .ai-result { margin-top: 8px; padding: 10px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.6; border: 1px solid var(--line); background: rgba(124,58,237,.05); }
+    .hourglass-spin {
+      display: inline-block;
+      animation: hourglass-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes hourglass-pulse {
+      0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+      50% { opacity: .45; transform: scale(0.88) rotate(8deg); }
+    }
+    .loading-card {
+      border: 1px dashed var(--line);
+      background: var(--panel-2);
+      border-radius: 14px;
+      padding: 36px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .loading-card .hourglass-spin { font-size: 30px; margin-bottom: 10px; display: block; }
     @media (max-width: 1200px) {
       #resultsGrid { grid-template-columns: 1fr 1fr !important; }
     }
@@ -239,7 +256,7 @@
         <div class="sub">
           형식 제한과 감점 문구는 물론, 실적·자격 과다 제한·과다 배상책임·지식재산권 부당이관 문구까지 함께 찾아내고,
           <b>사용자 키워드</b>와 <b>독소조항 누적 학습 문구</b>를 반영해 위험도를 정교하게 산출하는 버전입니다.
-          <b>PDF / HWPX / TXT / MD / HTML</b> 업로드를 지원하며, Gemini API 키를 설정하면 분석 직후 <b>AI가 자동으로 재검토</b>하여
+          <b>PDF / HWPX / TXT / MD / HTML</b> 업로드를 지원하며, AI 프록시가 설정되어 있으면 분석 직후 <b>AI(하이퍼클로바X)가 자동으로 재검토</b>하여
           실제 독소조항으로 확인된 문구만 골라서 보여줍니다.
         </div>
         <div class="chips">
@@ -408,11 +425,11 @@
 
         <details class="keyword-box" id="aiSettingsBox">
           <summary>
-            <span>🤖 AI 자동 필터링 (Gemini, 전 직원 공통 적용)</span>
+            <span>🤖 AI 자동 필터링 (하이퍼클로바X, 전 직원 공통 적용)</span>
           </summary>
           <p>
-            [독소조항 분석] 버튼을 누르면 사전·정규식으로 탐지된 후보 문구들을 <b>사내 AI 프록시(Firebase Cloud Functions)를 거쳐 Google Gemini가 다시 검토</b>하여,
-            실제로 독소조항이라고 판단한 문구만 최종 목록에 남깁니다. <b>Gemini API 키는 이 파일이나 브라우저 어디에도 저장되지 않고
+            [독소조항 분석] 버튼을 누르면 사전·정규식으로 탐지된 후보 문구들을 <b>사내 AI 프록시(Firebase Cloud Functions)를 거쳐 네이버 하이퍼클로바X가 다시 검토</b>하여,
+            실제로 독소조항이라고 판단한 문구만 최종 목록에 남깁니다. <b>CLOVA Studio API 키는 이 파일이나 브라우저 어디에도 저장되지 않고
             서버(Worker) 안에만 있으며</b>, 각 직원이 개별로 키를 설정할 필요 없이 관리자가 한 번 배포해두면 전 직원에게 자동 적용됩니다.
             탐지된 후보 문구(및 앞뒤 한 줄)만 전송되고 문서 전체는 전송되지 않습니다.
           </p>
@@ -611,7 +628,7 @@
     <div class="footer">
       ※ 공고문·기준서 본문의 분석은 항상 사용자 PC(브라우저) 내부에서만 이루어집니다.<br/>
       ※ 표준 기준서·탐지 키워드·학습 문구·분석횟수·피드백·독소조항 사례·오탐지 신고 데이터는 전 직원 공유를 위해 Firebase 데이터베이스에 저장됩니다.<br/>
-      ※ AI 자동 필터링 기능을 켜면 <b>탐지된 후보 문구(및 앞뒤 한 줄)만</b> 사내 AI 프록시(Firebase Cloud Functions)를 거쳐 Google Gemini로 전송됩니다. 꺼두면 전송되지 않습니다.<br/>
+      ※ AI 자동 필터링 기능을 켜면 <b>탐지된 후보 문구(및 앞뒤 한 줄)만</b> 사내 AI 프록시(Firebase Cloud Functions)를 거쳐 네이버 하이퍼클로바X로 전송됩니다. 꺼두면 전송되지 않습니다.<br/>
       Copyright 2026 KG Technova All rights reserved.
     </div>
   </div>
@@ -657,19 +674,19 @@
     // ============================================================
     // AI 자동 필터링용 프록시 주소 (Firebase Cloud Functions)
     // ------------------------------------------------------------
-    // Gemini API 키는 절대 이 파일에 넣지 마세요. 대신 Firebase Cloud Functions를
-    // 배포해 그 함수가 키를 갖고 Gemini를 대신 호출하도록 하고, 여기에는 그
-    // 함수의 공개 URL만 적어둡니다
-    // (예: https://asia-northeast3-toxcop-311a8.cloudfunctions.net/geminiProxy).
+    // CLOVA Studio(하이퍼클로바X) API 키는 절대 이 파일에 넣지 마세요. 대신
+    // Firebase Cloud Functions를 배포해 그 함수가 키를 갖고 CLOVA Studio를
+    // 대신 호출하도록 하고, 여기에는 그 함수의 공개 URL만 적어둡니다
+    // (예: https://asia-northeast3-toxcop-311a8.cloudfunctions.net/clovaProxy).
     // 이 URL 자체는 비밀값이 아니라서 코드에 그대로 넣어도 안전합니다 — 실제 보안은
-    // 함수 안의 GEMINI_API_KEY(Secret Manager 비밀값)와 Origin 제한이 담당합니다.
+    // 함수 안의 CLOVA_API_KEY(Secret Manager 비밀값)와 Origin 제한이 담당합니다.
     // 비워두면 AI 자동 필터링 없이 사전·정규식 탐지 결과만 그대로 표시됩니다.
     // 배포 방법은 함께 제공된 functions/index.js를 참고하세요.
-    // (예전에 시도했던 Cloudflare Worker 방식은 Gemini API의 지역 차단 오류가
-    // 간헐적으로 발생해 Firebase Cloud Functions 방식으로 대체했습니다.)
+    // (보안/데이터 반출 문제로, 해외 업체인 Google Gemini 대신 국내 업체인
+    // 네이버 하이퍼클로바X(CLOVA Studio)로 교체했습니다.)
     // ============================================================
-    const GEMINI_PROXY_URL = 'https://asia-northeast3-toxcop-311a8.cloudfunctions.net/geminiProxy';
-    const GEMINI_MODEL = 'gemini-3.5-flash'; // gemini-2.5-flash가 신규 발급 키에서 조기 차단되어 최신 모델로 변경
+    const AI_PROXY_URL = 'https://asia-northeast3-toxcop-311a8.cloudfunctions.net/clovaProxy';
+    const AI_MODEL = 'HCX-DASH-002'; // 가볍고 빠른 모델. 정확도가 더 필요하면 HCX-005/HCX-007로 교체 가능
 
     let db = null, auth = null;
     if (FIREBASE_READY) {
@@ -1750,7 +1767,14 @@
       const btn = el('analyzeBtn');
       const originalLabel = btn.textContent;
       btn.disabled = true;
-      btn.textContent = '분석 중…';
+      btn.innerHTML = '<span class="hourglass-spin">⏳</span> 분석 중…';
+      el('findings').innerHTML = `
+        <div class="loading-card">
+          <span class="hourglass-spin">⏳</span>
+          문서를 분석하고 있습니다…<br/>
+          <span class="small">AI 자동 필터링을 사용 중이면 문구 수에 따라 시간이 조금 더 걸릴 수 있어요.</span>
+        </div>
+      `;
       try {
         let result = analyzeText(text);
         result = await applyAiAutoFilter(result);
@@ -1767,9 +1791,9 @@
       }
     }
 
-    // ── AI 자동 필터링 (Google Gemini API 직접 호출) ─────────────────
+    // ── AI 자동 필터링 (네이버 하이퍼클로바X / CLOVA Studio 호출) ─────────────────
     // 사전·정규식 탐지는 여전히 1차 필터로 동작합니다. 여기서는 그 후보들을
-    // Gemini에 한 번에(배치) 보내 실제 독소조항인지 다시 판정하고, "독소조항"으로
+    // AI(하이퍼클로바X)에 한 번에(배치) 보내 실제 독소조항인지 다시 판정하고, "독소조항"으로
     // 확인된 항목만 최종적으로 사용자에게 노출합니다.
     function getAiSettings() {
       return {
@@ -1779,7 +1803,7 @@
     function refreshAiSettingsStatus() {
       const { autoFilter } = getAiSettings();
       if (el('aiAutoFilterToggle')) el('aiAutoFilterToggle').checked = autoFilter;
-      const proxyConfigured = Boolean(GEMINI_PROXY_URL);
+      const proxyConfigured = Boolean(AI_PROXY_URL);
       if (el('aiSettingsStatus')) {
         if (!proxyConfigured) {
           el('aiSettingsStatus').innerHTML = '• 관리자가 아직 AI 프록시(Firebase Cloud Functions) 주소를 설정하지 않았습니다. 설정 전까지는 사전·정규식 탐지 결과만 표시됩니다.';
@@ -1795,12 +1819,12 @@
     }
 
     // items: [{ idx, text, prev, next }] → 사내 AI 프록시(Firebase Cloud Functions)에 배치로 보내고 판정 배열을 받습니다.
-    // Gemini API 키는 Worker 안에만 있으며 이 브라우저에는 절대 내려오지 않습니다.
-    async function callGeminiBatchReview(items) {
-      const resp = await fetch(GEMINI_PROXY_URL, {
+    // CLOVA Studio API 키는 Cloud Functions 안에만 있으며 이 브라우저에는 절대 내려오지 않습니다.
+    async function callAiBatchReview(items) {
+      const resp = await fetch(AI_PROXY_URL, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ model: GEMINI_MODEL, items })
+        body: JSON.stringify({ model: AI_MODEL, items })
       });
       if (!resp.ok) {
         const errText = await resp.text().catch(() => '');
@@ -1814,9 +1838,9 @@
     // result.findings에 남기고, 나머지는 화면에 노출되지 않습니다.
     async function applyAiAutoFilter(result) {
       const { autoFilter } = getAiSettings();
-      if (!autoFilter || !GEMINI_PROXY_URL) {
+      if (!autoFilter || !AI_PROXY_URL) {
         if (el('aiFilterStatus')) {
-          el('aiFilterStatus').innerHTML = !GEMINI_PROXY_URL
+          el('aiFilterStatus').innerHTML = !AI_PROXY_URL
             ? '• 관리자가 아직 AI 프록시를 설정하지 않아, 사전·정규식 탐지 결과를 그대로 표시합니다.'
             : '• AI 자동 필터링이 꺼져 있습니다. 사전·정규식 탐지 결과를 그대로 표시합니다.';
         }
@@ -1825,7 +1849,7 @@
       const pureFindings = result.findings.filter(f => !f.standardAdded || f.matched.some(k => k !== 'standard'));
       if (!pureFindings.length) return result;
 
-      if (el('aiFilterStatus')) el('aiFilterStatus').innerHTML = `• 🤖 AI가 후보 ${pureFindings.length}건을 검토하는 중입니다…`;
+      if (el('aiFilterStatus')) el('aiFilterStatus').innerHTML = `<span class="hourglass-spin">⏳</span> AI가 후보 ${pureFindings.length}건을 검토하는 중입니다…`;
 
       const lines = el('sourceText').value.split(/\r?\n/).map(l => l.trim());
       const items = pureFindings.map((f, i) => ({
@@ -1840,10 +1864,10 @@
       for (let start = 0; start < items.length; start += CHUNK) {
         const chunk = items.slice(start, start + CHUNK);
         if (el('aiFilterStatus') && items.length > CHUNK) {
-          el('aiFilterStatus').innerHTML = `• 🤖 AI 검토 중… (${Math.min(start + CHUNK, items.length)}/${items.length}건)`;
+          el('aiFilterStatus').innerHTML = `<span class="hourglass-spin">⏳</span> AI 검토 중… (${Math.min(start + CHUNK, items.length)}/${items.length}건)`;
         }
         try {
-          const results = await callGeminiBatchReview(chunk);
+          const results = await callAiBatchReview(chunk);
           results.forEach(r => { if (typeof r.idx === 'number') verdictMap.set(r.idx, { verdict: r.verdict, reason: r.reason }); });
         } catch (e) {
           console.error(e);
