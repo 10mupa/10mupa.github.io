@@ -425,11 +425,11 @@
 
         <details class="keyword-box">
           <summary>
-            <span>🔎 미탐지 신고 학습 관리 (키지 체커)</span>
+            <span>🔎 미탐지 신고·칭찬 학습 관리 (키지 체커)</span>
             <button type="button" class="admin-unlock-btn" onclick="toggleAdminUnlock(event)">🔒 관리자 인증</button>
           </summary>
           <p>
-            키지 체커(크롬 확장프로그램)에서 직원들이 <b>[놓친 독소조항 신고]</b>한 문구입니다. 신고가 <b>1건이라도 접수되면</b>
+            키지 체커(크롬 확장프로그램)에서 직원들이 <b>[놓친 독소조항 신고]</b>하거나 <b>[👍 칭찬: 진짜 독소조항이야]</b>를 누른 문구입니다. 신고가 <b>1건이라도 접수되면</b>
             아래 후보 목록에 나타나며, 관리자가 승인하면 <b>학습 문구</b>로 등록되어 이후 모든 직원의 결과에 자동으로 표기됩니다.
           </p>
           <div class="toolbar">
@@ -1122,8 +1122,9 @@
       const groups = new Map(); // hash -> { hash, normText, rawText, reporters:Set }
       falsePositiveReports.forEach(r => {
         if (!r.hash || !r.normText) return;
-        if (!groups.has(r.hash)) groups.set(r.hash, { hash: r.hash, normText: r.normText, rawText: r.rawText || r.normText, total: 0 });
+        if (!groups.has(r.hash)) groups.set(r.hash, { hash: r.hash, normText: r.normText, rawText: r.rawText || r.normText, total: 0, praise: 0 });
         groups.get(r.hash).total += Math.max(1, Number(r.count) || 1);
+        groups.get(r.hash).praise += Number(r.praiseCount) || 0;
       });
       return [...groups.values()]
         .filter(g => !globalWhitelistHashSet.has(g.hash))
@@ -1209,7 +1210,7 @@
       listEl.innerHTML = candidates.map(c => `
         <div class="item">
           <div class="item-top">
-            <div class="badges"><span class="badge yellow">신고 ${c.reportCount}회</span></div>
+            <div class="badges"><span class="badge yellow">신고 ${c.reportCount}회</span>${c.praise ? `<span class="badge green">👍 칭찬 ${c.praise}회</span>` : ''}</div>
             <div class="row" style="flex:0 0 auto; gap:6px;">
               <button class="ok-btn" style="padding:4px 8px; font-size:11px;" onclick="approveMissed('${c.hash}')">학습 승인</button>
               <button class="danger-btn" style="padding:4px 8px; font-size:11px;" onclick="dismissMissed('${c.hash}')">신고 초기화</button>
